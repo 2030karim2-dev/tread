@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { motion } from 'framer-motion';
-import { LucideIcon } from 'lucide-react';
+import { LucideIcon, TrendingUp, TrendingDown } from 'lucide-react';
 
 interface StatCardProps {
   title: string;
@@ -9,42 +9,60 @@ interface StatCardProps {
   trend?: string;
   trendUp?: boolean;
   variant?: 'default' | 'primary' | 'secondary' | 'accent';
+  delay?: number;
 }
 
-const variantStyles = {
-  default: 'bg-card border border-border',
-  primary: 'gradient-primary text-primary-foreground',
-  secondary: 'gradient-secondary text-secondary-foreground',
-  accent: 'bg-accent text-accent-foreground',
+const variantConfig = {
+  default: {
+    card: 'bg-card border border-border shadow-card',
+    icon: 'bg-muted text-muted-foreground',
+    text: 'text-foreground',
+    sub: 'text-muted-foreground',
+  },
+  primary: {
+    card: 'gradient-primary shadow-colored-primary gradient-card-shine',
+    icon: 'bg-primary-foreground/15 text-primary-foreground',
+    text: 'text-primary-foreground',
+    sub: 'text-primary-foreground/70',
+  },
+  secondary: {
+    card: 'gradient-secondary shadow-colored-secondary gradient-card-shine',
+    icon: 'bg-secondary-foreground/15 text-secondary-foreground',
+    text: 'text-secondary-foreground',
+    sub: 'text-secondary-foreground/70',
+  },
+  accent: {
+    card: 'gradient-accent shadow-colored-accent gradient-card-shine',
+    icon: 'bg-accent-foreground/15 text-accent-foreground',
+    text: 'text-accent-foreground',
+    sub: 'text-accent-foreground/70',
+  },
 };
 
-const iconBg = {
-  default: 'bg-muted',
-  primary: 'bg-primary-foreground/20',
-  secondary: 'bg-secondary-foreground/20',
-  accent: 'bg-accent-foreground/20',
-};
+export function StatCard({ title, value, icon: Icon, trend, trendUp, variant = 'default', delay = 0 }: StatCardProps) {
+  const config = variantConfig[variant];
 
-export function StatCard({ title, value, icon: Icon, trend, trendUp, variant = 'default' }: StatCardProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={`rounded-xl p-4 shadow-sm ${variantStyles[variant]}`}
+      initial={{ opacity: 0, y: 20, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ delay, duration: 0.4, ease: 'easeOut' }}
+      className={`rounded-2xl p-4 lg:p-5 ${config.card}`}
     >
-      <div className="flex items-center justify-between mb-3">
-        <span className={`text-sm font-medium ${variant === 'default' ? 'text-muted-foreground' : 'opacity-80'}`}>
+      <div className="flex items-start justify-between mb-3">
+        <span className={`text-xs lg:text-sm font-medium ${config.sub}`}>
           {title}
         </span>
-        <div className={`p-2 rounded-lg ${iconBg[variant]}`}>
-          <Icon className="w-4 h-4" />
+        <div className={`p-2 lg:p-2.5 rounded-xl ${config.icon}`}>
+          <Icon className="w-4 h-4 lg:w-5 lg:h-5" />
         </div>
       </div>
-      <div className="text-2xl font-bold">{value}</div>
+      <div className={`text-xl lg:text-2xl font-extrabold ${config.text} tracking-tight`}>{value}</div>
       {trend && (
-        <p className={`text-xs mt-1 font-medium ${trendUp ? 'text-success' : 'text-destructive'}`}>
-          {trend}
-        </p>
+        <div className={`flex items-center gap-1 mt-2 ${trendUp ? 'text-success' : 'text-destructive'}`}>
+          {trendUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+          <span className="text-[11px] font-semibold">{trend}</span>
+        </div>
       )}
     </motion.div>
   );
