@@ -1,23 +1,23 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { mockSuppliers } from '@/data/mock-data';
+import { PageHeader } from '@/components/shared';
 import { Button } from '@/components/ui/button';
 import { FileText, ArrowLeftRight } from 'lucide-react';
 
 const mockQuotations = [
   {
-    id: '1', supplier_id: '1', supplier_name: 'وانغ لي - Guangzhou Auto Parts', date: '2025-01-12',
+    id: '1', supplier_name: 'وانغ لي - Guangzhou Auto Parts', date: '2025-01-12',
     items: [
       { product: 'فلتر زيت تويوتا', oem: '04152-YZZA1', qty: 500, price: 8 },
       { product: 'فلتر هواء كامري', oem: '17801-0H050', qty: 300, price: 12 },
-    ]
+    ],
   },
   {
-    id: '2', supplier_id: '3', supplier_name: 'ليو هوا - Shanghai Brake Systems', date: '2025-01-14',
+    id: '2', supplier_name: 'ليو هوا - Shanghai Brake Systems', date: '2025-01-14',
     items: [
       { product: 'فلتر زيت تويوتا', oem: '04152-YZZA1', qty: 500, price: 9.5 },
       { product: 'فلتر هواء كامري', oem: '17801-0H050', qty: 300, price: 11 },
-    ]
+    ],
   },
 ];
 
@@ -26,12 +26,11 @@ export default function QuotationsPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-bold">عروض الأسعار</h3>
-        <Button onClick={() => setComparing(!comparing)} variant={comparing ? "default" : "outline"} className="gap-2">
+      <PageHeader title="عروض الأسعار">
+        <Button onClick={() => setComparing(!comparing)} variant={comparing ? 'default' : 'outline'} className="gap-2">
           <ArrowLeftRight className="w-4 h-4" /> {comparing ? 'إنهاء المقارنة' : 'مقارنة العروض'}
         </Button>
-      </div>
+      </PageHeader>
 
       {comparing ? (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-card rounded-xl border border-border shadow-sm overflow-x-auto">
@@ -56,9 +55,7 @@ export default function QuotationsPage() {
                     <td className="spreadsheet-cell text-sm font-medium">{item.product}</td>
                     <td className="spreadsheet-cell text-sm font-mono">{item.oem}</td>
                     {prices.map((p, j) => (
-                      <td key={j} className={`spreadsheet-cell text-center text-sm font-bold ${p === minPrice ? 'text-accent' : ''}`}>
-                        ¥{p}
-                      </td>
+                      <td key={j} className={`spreadsheet-cell text-center text-sm font-bold ${p === minPrice ? 'text-accent' : ''}`}>¥{p}</td>
                     ))}
                     <td className="spreadsheet-cell text-center text-sm text-destructive font-semibold">¥{diff.toFixed(1)}</td>
                   </tr>
@@ -70,13 +67,7 @@ export default function QuotationsPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {mockQuotations.map((q, i) => (
-            <motion.div
-              key={q.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className="bg-card rounded-xl border border-border p-4 shadow-sm"
-            >
+            <motion.div key={q.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="bg-card rounded-xl border border-border p-4 shadow-sm">
               <div className="flex items-center gap-3 mb-3">
                 <div className="p-2 rounded-lg gradient-primary"><FileText className="w-4 h-4 text-primary-foreground" /></div>
                 <div>

@@ -1,44 +1,35 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, MapPin, Calendar } from 'lucide-react';
-import { StatusBadge } from '@/components/ui/status-badge';
-import { mockTrips } from '@/data/mock-data';
+import { PageHeader, StatusBadge, EmptyState } from '@/components/shared';
+import { useAppStore } from '@/store/useAppStore';
 import { Trip } from '@/types';
+import { EMPTY_MESSAGES } from '@/constants';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 export default function TripsPage() {
-  const [trips, setTrips] = useState<Trip[]>(mockTrips);
+  const { trips, addTrip } = useAppStore();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: '', country: 'الصين', city: '', start_date: '', end_date: '', notes: '' });
 
   const handleAdd = () => {
-    const newTrip: Trip = {
-      id: Date.now().toString(),
-      ...form,
-      status: 'planning',
-    };
-    setTrips([newTrip, ...trips]);
+    addTrip({ ...form, status: 'planning' });
     setForm({ name: '', country: 'الصين', city: '', start_date: '', end_date: '', notes: '' });
     setOpen(false);
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-bold">رحلات الشراء</h3>
+      <PageHeader title="رحلات الشراء">
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="gradient-primary text-primary-foreground gap-2">
-              <Plus className="w-4 h-4" /> رحلة جديدة
-            </Button>
+            <Button className="gradient-primary text-primary-foreground gap-2"><Plus className="w-4 h-4" /> رحلة جديدة</Button>
           </DialogTrigger>
           <DialogContent dir="rtl" className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>إضافة رحلة جديدة</DialogTitle>
-            </DialogHeader>
+            <DialogHeader><DialogTitle>إضافة رحلة جديدة</DialogTitle></DialogHeader>
             <div className="space-y-3 mt-2">
               <div><Label>اسم الرحلة</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="رحلة قوانغتشو..." /></div>
               <div className="grid grid-cols-2 gap-3">
@@ -54,35 +45,27 @@ export default function TripsPage() {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
+      </PageHeader>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {trips.map((trip, i) => (
-          <motion.div
-            key={trip.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
-            className="bg-card rounded-xl border border-border p-4 shadow-sm hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-start justify-between mb-3">
-              <h4 className="font-bold text-sm">{trip.name}</h4>
-              <StatusBadge status={trip.status} />
-            </div>
-            <div className="space-y-2 text-xs text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <MapPin className="w-3.5 h-3.5" />
-                <span>{trip.city}، {trip.country}</span>
+      {trips.length === 0 ? (
+        <EmptyState message={EMPTY_MESSAGES.trips} />
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {trips.map((trip, i) => (
+            <motion.div key={trip.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="bg-card rounded-xl border border-border p-4 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-start justify-between mb-3">
+                <h4 className="font-bold text-sm">{trip.name}</h4>
+                <StatusBadge status={trip.status} />
               </div>
-              <div className="flex items-center gap-2">
-                <Calendar className="w-3.5 h-3.5" />
-                <span>{trip.start_date} → {trip.end_date}</span>
+              <div className="space-y-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2"><MapPin className="w-3.5 h-3.5" /><span>{trip.city}، {trip.country}</span></div>
+                <div className="flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /><span>{trip.start_date} → {trip.end_date}</span></div>
               </div>
-            </div>
-            {trip.notes && <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border">{trip.notes}</p>}
-          </motion.div>
-        ))}
-      </div>
+              {trip.notes && <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border">{trip.notes}</p>}
+            </motion.div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
