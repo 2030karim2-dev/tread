@@ -8,3 +8,7 @@ export { PageHeader } from './PageHeader';
 export { StatusBadge } from './StatusBadge';
 export { StarRating } from './StarRating';
 export { StatCard } from './StatCard';
+export { CurrencyConverter } from './CurrencyConverter';
+export { SearchBar } from './SearchBar';
+export { ExportButton } from './ExportButton';
+export { ConfirmDialog } from './ConfirmDialog';
