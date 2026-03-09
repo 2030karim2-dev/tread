@@ -1,7 +1,18 @@
 import { motion } from 'framer-motion';
 import { PageHeader, StatusBadge } from '@/components/shared';
 import { useAppStore } from '@/store/useAppStore';
-import { Ship, MapPin, Package, DollarSign, Weight, Calendar, Anchor, Clock } from 'lucide-react';
+import { STATUS_LABELS } from '@/constants';
+import { Ship, MapPin, Package, DollarSign, Weight, Calendar, Anchor, Clock, Check, Circle } from 'lucide-react';
+
+const TIMELINE_STAGES = ['purchased', 'at_warehouse', 'shipped', 'in_transit', 'arrived', 'delivered'] as const;
+const STAGE_ICONS: Record<string, React.ElementType> = {
+  purchased: Package,
+  at_warehouse: Anchor,
+  shipped: Ship,
+  in_transit: Ship,
+  arrived: MapPin,
+  delivered: Check,
+};
 
 const statusProgress: Record<string, number> = {
   purchased: 15,
@@ -22,6 +33,8 @@ export default function ShippingPage() {
       <div className="grid gap-4 lg:grid-cols-2">
         {shipments.map((s, i) => {
           const progress = statusProgress[s.status] || 0;
+          const currentIdx = TIMELINE_STAGES.indexOf(s.status as typeof TIMELINE_STAGES[number]);
+
           return (
             <motion.div
               key={s.id}
@@ -71,6 +84,53 @@ export default function ShippingPage() {
                     </div>
                     <p className="text-[10px] font-bold">{s.arrival_port}</p>
                   </div>
+                </div>
+              </div>
+
+              {/* Timeline */}
+              <div className="mb-4 px-2">
+                <div className="flex items-center justify-between">
+                  {TIMELINE_STAGES.map((stage, idx) => {
+                    const StageIcon = STAGE_ICONS[stage];
+                    const isCompleted = idx < currentIdx;
+                    const isCurrent = idx === currentIdx;
+                    const isFuture = idx > currentIdx;
+
+                    return (
+                      <div key={stage} className="flex items-center flex-1 last:flex-none">
+                        <div className="flex flex-col items-center">
+                          <motion.div
+                            initial={{ scale: 0.5 }}
+                            animate={{ scale: 1 }}
+                            transition={{ delay: idx * 0.08 }}
+                            className={`w-7 h-7 rounded-full flex items-center justify-center border-2 transition-all ${
+                              isCompleted
+                                ? 'bg-accent border-accent text-accent-foreground'
+                                : isCurrent
+                                ? 'bg-primary border-primary text-primary-foreground ring-4 ring-primary/20'
+                                : 'bg-muted border-border text-muted-foreground'
+                            }`}
+                          >
+                            {isCompleted ? (
+                              <Check className="w-3.5 h-3.5" />
+                            ) : (
+                              <StageIcon className="w-3 h-3" />
+                            )}
+                          </motion.div>
+                          <p className={`text-[9px] mt-1 text-center leading-tight max-w-[50px] ${
+                            isCurrent ? 'font-bold text-primary' : isFuture ? 'text-muted-foreground' : 'font-medium text-accent'
+                          }`}>
+                            {STATUS_LABELS[stage]}
+                          </p>
+                        </div>
+                        {idx < TIMELINE_STAGES.length - 1 && (
+                          <div className={`flex-1 h-0.5 mx-1 rounded-full mt-[-14px] ${
+                            idx < currentIdx ? 'bg-accent' : 'bg-border'
+                          }`} />
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 

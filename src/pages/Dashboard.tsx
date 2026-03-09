@@ -3,11 +3,24 @@ import { StatCard, StatusBadge, StarRating } from '@/components/shared';
 import { useAppStore } from '@/store/useAppStore';
 import { convertCurrency } from '@/lib/currency';
 import { formatNumber } from '@/lib/helpers';
+import { EXPENSE_CATEGORIES } from '@/constants';
 import {
   DollarSign, ShoppingCart, TrendingUp, Package,
-  Plane, Ship, Users, Warehouse, ArrowUpLeft, ArrowDownRight,
-  BarChart3, Activity
+  Plane, Ship, Users, Warehouse, BarChart3, Activity
 } from 'lucide-react';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend
+} from 'recharts';
+
+const CHART_COLORS = [
+  'hsl(var(--primary))',
+  'hsl(var(--secondary))',
+  'hsl(var(--accent))',
+  'hsl(var(--info))',
+  'hsl(var(--warning))',
+  'hsl(var(--destructive))',
+];
 
 export default function Dashboard() {
   const { trips, suppliers, shipments, inventory, expenses } = useAppStore();
@@ -18,6 +31,23 @@ export default function Dashboard() {
   const totalProfit = totalSales - totalPurchases - totalExpenses;
   const inventoryValue = inventory.reduce((s, i) => s + i.quantity_available * i.sale_price, 0);
   const profitMargin = totalSales > 0 ? Math.round((totalProfit / totalSales) * 100) : 0;
+
+  // Chart data
+  const barChartData = inventory.map(item => ({
+    name: item.product_name.length > 12 ? item.product_name.slice(0, 12) + '…' : item.product_name,
+    purchases: item.quantity_purchased * item.purchase_price,
+    sales: item.quantity_sold * item.sale_price,
+  }));
+
+  const expensesByCategory = Object.entries(
+    expenses.reduce<Record<string, number>>((acc, e) => {
+      acc[e.category] = (acc[e.category] || 0) + convertCurrency(e.amount, e.currency as 'CNY' | 'USD' | 'SAR', 'USD');
+      return acc;
+    }, {})
+  ).map(([cat, value]) => ({
+    name: EXPENSE_CATEGORIES[cat]?.label || cat,
+    value: Math.round(value),
+  }));
 
   return (
     <div className="space-y-6">
@@ -71,6 +101,73 @@ export default function Dashboard() {
         <StatCard title="قيمة المخزون" value={`$${formatNumber(inventoryValue)}`} icon={Warehouse} delay={0.2} />
       </div>
 
+      {/* Charts Section */}
+      <div className="grid lg:grid-cols-2 gap-4">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="bg-card rounded-2xl border border-border p-5 shadow-card">
+          <h3 className="font-bold text-sm flex items-center gap-2 mb-4">
+            <BarChart3 className="w-4 h-4 text-primary" />
+            المشتريات مقابل المبيعات
+          </h3>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={barChartData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                <Tooltip
+                  contentStyle={{
+                    background: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '12px',
+                    fontSize: 12,
+                  }}
+                  formatter={(value: number) => [`$${formatNumber(value)}`, '']}
+                />
+                <Bar dataKey="purchases" name="المشتريات" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="sales" name="المبيعات" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-card rounded-2xl border border-border p-5 shadow-card">
+          <h3 className="font-bold text-sm flex items-center gap-2 mb-4">
+            <DollarSign className="w-4 h-4 text-secondary" />
+            توزيع المصاريف
+          </h3>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={expensesByCategory}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={90}
+                  paddingAngle={3}
+                  dataKey="value"
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  labelLine={false}
+                >
+                  {expensesByCategory.map((_, idx) => (
+                    <Cell key={idx} fill={CHART_COLORS[idx % CHART_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    background: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '12px',
+                    fontSize: 12,
+                  }}
+                  formatter={(value: number) => [`$${value}`, '']}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </motion.div>
+      </div>
+
       {/* Quick Counts */}
       <div className="grid grid-cols-4 gap-2 lg:gap-3">
         {[
@@ -83,7 +180,7 @@ export default function Dashboard() {
             key={item.label}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.25 + i * 0.05 }}
+            transition={{ delay: 0.35 + i * 0.05 }}
             className="bg-card rounded-xl border border-border p-3 shadow-card text-center"
           >
             <item.icon className={`w-5 h-5 mx-auto mb-1.5 ${item.color}`} />
@@ -95,7 +192,7 @@ export default function Dashboard() {
 
       <div className="grid lg:grid-cols-2 gap-4">
         {/* Active Trips */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-card rounded-2xl border border-border p-5 shadow-card">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-card rounded-2xl border border-border p-5 shadow-card">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-sm flex items-center gap-2">
               <Plane className="w-4 h-4 text-primary" />
@@ -117,7 +214,7 @@ export default function Dashboard() {
         </motion.div>
 
         {/* Shipment Tracking */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="bg-card rounded-2xl border border-border p-5 shadow-card">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }} className="bg-card rounded-2xl border border-border p-5 shadow-card">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-sm flex items-center gap-2">
               <Ship className="w-4 h-4 text-info" />
@@ -146,7 +243,7 @@ export default function Dashboard() {
         </motion.div>
 
         {/* Top Suppliers */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-card rounded-2xl border border-border p-5 shadow-card">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="bg-card rounded-2xl border border-border p-5 shadow-card">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-sm flex items-center gap-2">
               <Users className="w-4 h-4 text-secondary" />
@@ -172,7 +269,7 @@ export default function Dashboard() {
         </motion.div>
 
         {/* Inventory Status */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }} className="bg-card rounded-2xl border border-border p-5 shadow-card">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }} className="bg-card rounded-2xl border border-border p-5 shadow-card">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-sm flex items-center gap-2">
               <Warehouse className="w-4 h-4 text-accent" />
