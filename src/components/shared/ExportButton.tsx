@@ -3,22 +3,22 @@ import { Button } from '@/components/ui/button';
 import { exportToCSV } from '@/lib/export';
 import { toast } from '@/hooks/use-toast';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-interface ExportButtonProps<T = any> {
-  data: T[];
+interface ExportButtonProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data: any[];
   columns: { key: string; header: string }[];
   filename: string;
   variant?: 'default' | 'outline' | 'ghost';
   size?: 'default' | 'sm' | 'icon';
 }
 
-export function ExportButton<T extends Record<string, unknown>>({
+export function ExportButton({
   data,
   columns,
   filename,
   variant = 'outline',
   size = 'default',
-}: ExportButtonProps<T>) {
+}: ExportButtonProps) {
   const handleExport = () => {
     if (data.length === 0) {
       toast({
