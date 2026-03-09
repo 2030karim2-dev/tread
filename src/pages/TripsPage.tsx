@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, MapPin, Calendar } from 'lucide-react';
+import { Plus, MapPin, Calendar, MoreVertical, Edit2, Trash2 } from 'lucide-react';
 import { PageHeader, StatusBadge, EmptyState, TextField } from '@/components/shared';
 import { useAppStore } from '@/store/useAppStore';
-import { tripSchema, TripFormData } from '@/lib/validations';
+import { tripSchema } from '@/lib/validations';
 import { EMPTY_MESSAGES } from '@/constants';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -35,13 +35,15 @@ export default function TripsPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="رحلات الشراء">
+      <PageHeader title="رحلات الشراء" subtitle={`${trips.length} رحلة مسجلة`}>
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setErrors({}); }}>
           <DialogTrigger asChild>
-            <Button className="gradient-primary text-primary-foreground gap-2"><Plus className="w-4 h-4" /> رحلة جديدة</Button>
+            <Button className="gradient-secondary shadow-colored-secondary text-secondary-foreground gap-2 font-bold">
+              <Plus className="w-4 h-4" /> رحلة جديدة
+            </Button>
           </DialogTrigger>
           <DialogContent dir="rtl" className="max-w-md">
-            <DialogHeader><DialogTitle>إضافة رحلة جديدة</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="font-extrabold">إضافة رحلة جديدة</DialogTitle></DialogHeader>
             <div className="space-y-3 mt-2">
               <TextField label="اسم الرحلة" value={form.name} onChange={v => setForm({ ...form, name: v })} placeholder="رحلة قوانغتشو..." error={errors.name} />
               <div className="grid grid-cols-2 gap-3">
@@ -53,7 +55,7 @@ export default function TripsPage() {
                 <TextField label="تاريخ النهاية" value={form.end_date} onChange={v => setForm({ ...form, end_date: v })} type="date" error={errors.end_date} />
               </div>
               <TextField label="ملاحظات" value={form.notes} onChange={v => setForm({ ...form, notes: v })} />
-              <Button onClick={handleAdd} className="w-full gradient-primary text-primary-foreground">حفظ الرحلة</Button>
+              <Button onClick={handleAdd} className="w-full gradient-secondary text-secondary-foreground font-bold">حفظ الرحلة</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -64,16 +66,34 @@ export default function TripsPage() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {trips.map((trip, i) => (
-            <motion.div key={trip.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="bg-card rounded-xl border border-border p-4 shadow-sm hover:shadow-md transition-shadow">
+            <motion.div
+              key={trip.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+              className="group bg-card rounded-2xl border border-border p-4 shadow-card glass-card-hover"
+            >
               <div className="flex items-start justify-between mb-3">
                 <h4 className="font-bold text-sm">{trip.name}</h4>
                 <StatusBadge status={trip.status} />
               </div>
               <div className="space-y-2 text-xs text-muted-foreground">
-                <div className="flex items-center gap-2"><MapPin className="w-3.5 h-3.5" /><span>{trip.city}، {trip.country}</span></div>
-                <div className="flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /><span>{trip.start_date} → {trip.end_date}</span></div>
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <MapPin className="w-3.5 h-3.5 text-primary" />
+                  </div>
+                  <span className="font-medium">{trip.city}، {trip.country}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-secondary/10 flex items-center justify-center">
+                    <Calendar className="w-3.5 h-3.5 text-secondary" />
+                  </div>
+                  <span>{trip.start_date} → {trip.end_date}</span>
+                </div>
               </div>
-              {trip.notes && <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border">{trip.notes}</p>}
+              {trip.notes && (
+                <p className="text-xs text-muted-foreground mt-3 pt-3 border-t border-border/50 line-clamp-2">{trip.notes}</p>
+              )}
             </motion.div>
           ))}
         </div>

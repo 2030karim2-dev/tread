@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Phone, MessageCircle } from 'lucide-react';
+import { Plus, Phone, MessageCircle, Building2, MapPin } from 'lucide-react';
 import { PageHeader, StarRating, EmptyState, TextField } from '@/components/shared';
 import { useAppStore } from '@/store/useAppStore';
 import { supplierSchema } from '@/lib/validations';
@@ -35,13 +35,15 @@ export default function SuppliersPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="الموردين">
+      <PageHeader title="الموردين" subtitle={`${suppliers.length} مورد مسجل`}>
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setErrors({}); }}>
           <DialogTrigger asChild>
-            <Button className="gradient-primary text-primary-foreground gap-2"><Plus className="w-4 h-4" /> مورد جديد</Button>
+            <Button className="gradient-secondary shadow-colored-secondary text-secondary-foreground gap-2 font-bold">
+              <Plus className="w-4 h-4" /> مورد جديد
+            </Button>
           </DialogTrigger>
           <DialogContent dir="rtl" className="max-w-md">
-            <DialogHeader><DialogTitle>إضافة مورد جديد</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="font-extrabold">إضافة مورد جديد</DialogTitle></DialogHeader>
             <div className="space-y-3 mt-2">
               <div className="grid grid-cols-2 gap-3">
                 <TextField label="اسم المورد" value={form.name} onChange={v => setForm({ ...form, name: v })} error={errors.name} />
@@ -56,7 +58,7 @@ export default function SuppliersPage() {
                 <TextField label="WeChat / WhatsApp" value={form.wechat_or_whatsapp} onChange={v => setForm({ ...form, wechat_or_whatsapp: v })} />
               </div>
               <TextField label="ملاحظات" value={form.notes} onChange={v => setForm({ ...form, notes: v })} />
-              <Button onClick={handleAdd} className="w-full gradient-primary text-primary-foreground">حفظ المورد</Button>
+              <Button onClick={handleAdd} className="w-full gradient-secondary text-secondary-foreground font-bold">حفظ المورد</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -67,18 +69,50 @@ export default function SuppliersPage() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {suppliers.map((sup, i) => (
-            <motion.div key={sup.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="bg-card rounded-xl border border-border p-4 shadow-sm">
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <h4 className="font-bold text-sm">{sup.name}</h4>
-                  <p className="text-xs text-muted-foreground">{sup.company_name}</p>
+            <motion.div
+              key={sup.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+              className="bg-card rounded-2xl border border-border p-4 shadow-card glass-card-hover"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center text-sm font-bold text-primary-foreground">
+                    {sup.name.charAt(0)}
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-sm">{sup.name}</h4>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Building2 className="w-3 h-3" />
+                      {sup.company_name}
+                    </p>
+                  </div>
                 </div>
                 <StarRating rating={sup.rating} onRate={(r) => updateSupplier(sup.id, { rating: r })} />
               </div>
-              <div className="space-y-1.5 text-xs text-muted-foreground mt-3">
-                <p className="inline-flex items-center gap-1.5 bg-muted rounded-full px-2 py-0.5 font-medium">{sup.product_category}</p>
-                <div className="flex items-center gap-2"><Phone className="w-3 h-3" />{sup.phone}</div>
-                <div className="flex items-center gap-2"><MessageCircle className="w-3 h-3" />{sup.wechat_or_whatsapp}</div>
+              
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                <span className="inline-flex items-center gap-1 bg-secondary/10 text-secondary rounded-lg px-2 py-0.5 text-[11px] font-semibold">
+                  {sup.product_category}
+                </span>
+                <span className="inline-flex items-center gap-1 bg-muted text-muted-foreground rounded-lg px-2 py-0.5 text-[11px]">
+                  <MapPin className="w-3 h-3" />
+                  {sup.city}
+                </span>
+              </div>
+
+              <div className="space-y-1.5 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
+                  <Phone className="w-3.5 h-3.5 text-primary" />
+                  <span className="font-mono text-foreground">{sup.phone}</span>
+                </div>
+                {sup.wechat_or_whatsapp && (
+                  <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
+                    <MessageCircle className="w-3.5 h-3.5 text-accent" />
+                    <span className="font-mono text-foreground">{sup.wechat_or_whatsapp}</span>
+                  </div>
+                )}
               </div>
             </motion.div>
           ))}
