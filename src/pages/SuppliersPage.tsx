@@ -1,29 +1,42 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Phone, MessageCircle } from 'lucide-react';
-import { PageHeader, StarRating, EmptyState } from '@/components/shared';
+import { PageHeader, StarRating, EmptyState, TextField } from '@/components/shared';
 import { useAppStore } from '@/store/useAppStore';
+import { supplierSchema } from '@/lib/validations';
 import { EMPTY_MESSAGES } from '@/constants';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { toast } from '@/hooks/use-toast';
+
+const emptyForm = { name: '', company_name: '', city: '', phone: '', wechat_or_whatsapp: '', product_category: '', notes: '' };
 
 export default function SuppliersPage() {
   const { suppliers, addSupplier, updateSupplier } = useAppStore();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: '', company_name: '', city: '', phone: '', wechat_or_whatsapp: '', product_category: '', notes: '' });
+  const [form, setForm] = useState(emptyForm);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleAdd = () => {
-    addSupplier({ ...form, rating: 0, trip_id: '1' });
-    setForm({ name: '', company_name: '', city: '', phone: '', wechat_or_whatsapp: '', product_category: '', notes: '' });
+    const result = supplierSchema.safeParse(form);
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.issues.forEach(issue => { fieldErrors[issue.path[0] as string] = issue.message; });
+      setErrors(fieldErrors);
+      return;
+    }
+    const d = result.data;
+    addSupplier({ name: d.name, company_name: d.company_name, city: d.city, phone: d.phone, wechat_or_whatsapp: d.wechat_or_whatsapp || '', product_category: d.product_category, notes: d.notes || '', rating: 0, trip_id: '1' });
+    setForm(emptyForm);
+    setErrors({});
     setOpen(false);
+    toast({ title: 'تمت الإضافة', description: 'تم إضافة المورد بنجاح' });
   };
 
   return (
     <div className="space-y-4">
       <PageHeader title="الموردين">
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setErrors({}); }}>
           <DialogTrigger asChild>
             <Button className="gradient-primary text-primary-foreground gap-2"><Plus className="w-4 h-4" /> مورد جديد</Button>
           </DialogTrigger>
@@ -31,18 +44,18 @@ export default function SuppliersPage() {
             <DialogHeader><DialogTitle>إضافة مورد جديد</DialogTitle></DialogHeader>
             <div className="space-y-3 mt-2">
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>اسم المورد</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
-                <div><Label>اسم الشركة</Label><Input value={form.company_name} onChange={e => setForm({ ...form, company_name: e.target.value })} /></div>
+                <TextField label="اسم المورد" value={form.name} onChange={v => setForm({ ...form, name: v })} error={errors.name} />
+                <TextField label="اسم الشركة" value={form.company_name} onChange={v => setForm({ ...form, company_name: v })} error={errors.company_name} />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>المدينة</Label><Input value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} /></div>
-                <div><Label>التصنيف</Label><Input value={form.product_category} onChange={e => setForm({ ...form, product_category: e.target.value })} /></div>
+                <TextField label="المدينة" value={form.city} onChange={v => setForm({ ...form, city: v })} error={errors.city} />
+                <TextField label="التصنيف" value={form.product_category} onChange={v => setForm({ ...form, product_category: v })} error={errors.product_category} />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>الهاتف</Label><Input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
-                <div><Label>WeChat / WhatsApp</Label><Input value={form.wechat_or_whatsapp} onChange={e => setForm({ ...form, wechat_or_whatsapp: e.target.value })} /></div>
+                <TextField label="الهاتف" value={form.phone} onChange={v => setForm({ ...form, phone: v })} error={errors.phone} />
+                <TextField label="WeChat / WhatsApp" value={form.wechat_or_whatsapp} onChange={v => setForm({ ...form, wechat_or_whatsapp: v })} />
               </div>
-              <div><Label>ملاحظات</Label><Input value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
+              <TextField label="ملاحظات" value={form.notes} onChange={v => setForm({ ...form, notes: v })} />
               <Button onClick={handleAdd} className="w-full gradient-primary text-primary-foreground">حفظ المورد</Button>
             </div>
           </DialogContent>

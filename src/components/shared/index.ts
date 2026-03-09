@@ -1,6 +1,9 @@
 export { EditableTable } from './EditableTable';
 export type { ColumnDef } from './EditableTable';
 export { EmptyState } from './EmptyState';
+export { ErrorBoundary } from './ErrorBoundary';
+export { FormField, SelectField, TextField } from './FormField';
+export { LoadingSkeleton } from './LoadingSkeleton';
 export { PageHeader } from './PageHeader';
 export { StatusBadge } from './StatusBadge';
 export { StarRating } from './StarRating';

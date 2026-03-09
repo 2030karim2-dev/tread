@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { motion } from 'framer-motion';
+import { Trash2 } from 'lucide-react';
 
 export interface ColumnDef<T> {
   key: string;
@@ -16,6 +17,7 @@ interface EditableTableProps<T extends { id: string }> {
   data: T[];
   columns: ColumnDef<T>[];
   onCellChange?: (id: string, field: string, value: string | number) => void;
+  onDeleteRow?: (id: string) => void;
   showRowNumbers?: boolean;
   footer?: ReactNode;
 }
@@ -24,6 +26,7 @@ export function EditableTable<T extends { id: string }>({
   data,
   columns,
   onCellChange,
+  onDeleteRow,
   showRowNumbers = true,
   footer,
 }: EditableTableProps<T>) {
@@ -38,32 +41,24 @@ export function EditableTable<T extends { id: string }>({
           <tr>
             {showRowNumbers && <th className="spreadsheet-header w-10">#</th>}
             {columns.map(col => (
-              <th
-                key={col.key}
-                className="spreadsheet-header"
-                style={{ minWidth: col.minWidth }}
-              >
+              <th key={col.key} className="spreadsheet-header" style={{ minWidth: col.minWidth }}>
                 {col.header}
               </th>
             ))}
+            {onDeleteRow && <th className="spreadsheet-header w-10" />}
           </tr>
         </thead>
         <tbody>
           {data.map((row, rowIdx) => (
-            <tr key={row.id} className="hover:bg-muted/30 transition-colors">
+            <tr key={row.id} className="group hover:bg-muted/30 transition-colors">
               {showRowNumbers && (
                 <td className="spreadsheet-cell text-center text-muted-foreground font-mono text-xs">
                   {rowIdx + 1}
                 </td>
               )}
               {columns.map(col => {
-                // Custom render
                 if (col.render) {
-                  return (
-                    <td key={col.key} className="spreadsheet-cell">
-                      {col.render(row, rowIdx)}
-                    </td>
-                  );
+                  return <td key={col.key} className="spreadsheet-cell">{col.render(row, rowIdx)}</td>;
                 }
 
                 const value = (row as Record<string, unknown>)[col.key];
@@ -71,10 +66,7 @@ export function EditableTable<T extends { id: string }>({
 
                 if (!editable) {
                   return (
-                    <td
-                      key={col.key}
-                      className={`spreadsheet-cell text-sm ${col.align === 'center' ? 'text-center' : ''} ${col.mono ? 'font-mono' : ''}`}
-                    >
+                    <td key={col.key} className={`spreadsheet-cell text-sm ${col.align === 'center' ? 'text-center' : ''} ${col.mono ? 'font-mono' : ''}`}>
                       {String(value ?? '')}
                     </td>
                   );
@@ -94,6 +86,16 @@ export function EditableTable<T extends { id: string }>({
                   </td>
                 );
               })}
+              {onDeleteRow && (
+                <td className="spreadsheet-cell text-center">
+                  <button
+                    onClick={() => onDeleteRow(row.id)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-destructive/10 text-destructive"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
