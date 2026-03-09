@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Plane, Users, Package, FileText, Ship,
   Warehouse, ShoppingCart, Receipt, DollarSign, Menu, X,
-  Settings, ChevronLeft
+  Settings, RefreshCw
 } from 'lucide-react';
 import logoImg from '@/assets/logo.png';
 
@@ -37,6 +37,7 @@ const navGroups = [
     items: [
       { path: '/sales', label: 'فواتير البيع', icon: Receipt },
       { path: '/expenses', label: 'المصروفات', icon: DollarSign },
+      { path: '/currency', label: 'محول العملات', icon: RefreshCw },
     ],
   },
 ];

@@ -15,17 +15,22 @@ interface AppState {
   // Trip actions
   addTrip: (trip: Omit<Trip, 'id'>) => void;
   updateTrip: (id: string, data: Partial<Trip>) => void;
+  deleteTrip: (id: string) => void;
 
   // Supplier actions
   addSupplier: (supplier: Omit<Supplier, 'id'>) => void;
   updateSupplier: (id: string, data: Partial<Supplier>) => void;
+  deleteSupplier: (id: string) => void;
 
   // Product actions
   addProduct: (product: Omit<Product, 'id'>) => void;
   updateProductField: (id: string, field: string, value: string | number) => void;
+  deleteProduct: (id: string) => void;
 
   // Expense actions
   addExpense: (expense: Omit<Expense, 'id'>) => void;
+  updateExpense: (id: string, data: Partial<Expense>) => void;
+  deleteExpense: (id: string) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -44,6 +49,9 @@ export const useAppStore = create<AppState>((set) => ({
       trips: state.trips.map((t) => (t.id === id ? { ...t, ...data } : t)),
     })),
 
+  deleteTrip: (id) =>
+    set((state) => ({ trips: state.trips.filter((t) => t.id !== id) })),
+
   addSupplier: (supplier) =>
     set((state) => ({ suppliers: [{ ...supplier, id: generateId() }, ...state.suppliers] })),
 
@@ -51,6 +59,9 @@ export const useAppStore = create<AppState>((set) => ({
     set((state) => ({
       suppliers: state.suppliers.map((s) => (s.id === id ? { ...s, ...data } : s)),
     })),
+
+  deleteSupplier: (id) =>
+    set((state) => ({ suppliers: state.suppliers.filter((s) => s.id !== id) })),
 
   addProduct: (product) =>
     set((state) => ({ products: [...state.products, { ...product, id: generateId() }] })),
@@ -62,6 +73,17 @@ export const useAppStore = create<AppState>((set) => ({
       ),
     })),
 
+  deleteProduct: (id) =>
+    set((state) => ({ products: state.products.filter((p) => p.id !== id) })),
+
   addExpense: (expense) =>
     set((state) => ({ expenses: [{ ...expense, id: generateId() }, ...state.expenses] })),
+
+  updateExpense: (id, data) =>
+    set((state) => ({
+      expenses: state.expenses.map((e) => (e.id === id ? { ...e, ...data } : e)),
+    })),
+
+  deleteExpense: (id) =>
+    set((state) => ({ expenses: state.expenses.filter((e) => e.id !== id) })),
 }));
