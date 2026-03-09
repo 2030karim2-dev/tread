@@ -1,57 +1,64 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus } from 'lucide-react';
-import { PageHeader, EmptyState } from '@/components/shared';
+import { PageHeader, EmptyState, TextField, SelectField } from '@/components/shared';
 import { useAppStore } from '@/store/useAppStore';
+import { expenseSchema } from '@/lib/validations';
 import { Expense } from '@/types';
 import { EXPENSE_CATEGORIES, CURRENCIES, EMPTY_MESSAGES } from '@/constants';
-import { convertCurrency, formatCurrency, getCurrencySymbol } from '@/lib/currency';
+import { convertCurrency, getCurrencySymbol } from '@/lib/currency';
 import { formatNumber } from '@/lib/helpers';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { toast } from '@/hooks/use-toast';
+
+const emptyForm = { category: 'hotel', amount: '', currency: 'CNY', date: '', notes: '' };
 
 export default function ExpensesPage() {
   const { expenses, addExpense } = useAppStore();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ category: 'hotel' as Expense['category'], amount: '', currency: 'CNY', date: '', notes: '' });
+  const [form, setForm] = useState(emptyForm);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const totalCNY = expenses.filter(e => e.currency === 'CNY').reduce((s, e) => s + e.amount, 0);
   const totalUSD = convertCurrency(totalCNY, 'CNY', 'USD');
 
   const handleAdd = () => {
-    addExpense({ trip_id: '1', ...form, amount: Number(form.amount) } as Omit<Expense, 'id'>);
+    const parsed = { ...form, amount: Number(form.amount) };
+    const result = expenseSchema.safeParse(parsed);
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.issues.forEach(issue => { fieldErrors[issue.path[0] as string] = issue.message; });
+      setErrors(fieldErrors);
+      return;
+    }
+    addExpense({ trip_id: '1', ...result.data } as Omit<Expense, 'id'>);
+    setForm(emptyForm);
+    setErrors({});
     setOpen(false);
+    toast({ title: 'تمت الإضافة', description: 'تم إضافة المصروف بنجاح' });
   };
+
+  const categoryOptions = Object.entries(EXPENSE_CATEGORIES).map(([k, v]) => ({ value: k, label: v.label }));
+  const currencyOptions = CURRENCIES.map(c => ({ value: c.code, label: c.label }));
 
   return (
     <div className="space-y-4">
       <PageHeader title="المصروفات">
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setErrors({}); }}>
           <DialogTrigger asChild>
             <Button className="gradient-primary text-primary-foreground gap-2"><Plus className="w-4 h-4" /> مصروف جديد</Button>
           </DialogTrigger>
           <DialogContent dir="rtl" className="max-w-md">
             <DialogHeader><DialogTitle>إضافة مصروف</DialogTitle></DialogHeader>
             <div className="space-y-3 mt-2">
-              <div>
-                <Label>التصنيف</Label>
-                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.category} onChange={e => setForm({ ...form, category: e.target.value as Expense['category'] })}>
-                  {Object.entries(EXPENSE_CATEGORIES).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-                </select>
-              </div>
+              <SelectField label="التصنيف" value={form.category} onChange={v => setForm({ ...form, category: v })} options={categoryOptions} error={errors.category} />
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>المبلغ</Label><Input type="number" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} /></div>
-                <div>
-                  <Label>العملة</Label>
-                  <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.currency} onChange={e => setForm({ ...form, currency: e.target.value })}>
-                    {CURRENCIES.map(c => <option key={c.code} value={c.code}>{c.label}</option>)}
-                  </select>
-                </div>
+                <TextField label="المبلغ" value={form.amount} onChange={v => setForm({ ...form, amount: v })} type="number" error={errors.amount} />
+                <SelectField label="العملة" value={form.currency} onChange={v => setForm({ ...form, currency: v })} options={currencyOptions} />
               </div>
-              <div><Label>التاريخ</Label><Input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} /></div>
-              <div><Label>ملاحظات</Label><Input value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
+              <TextField label="التاريخ" value={form.date} onChange={v => setForm({ ...form, date: v })} type="date" error={errors.date} />
+              <TextField label="ملاحظات" value={form.notes} onChange={v => setForm({ ...form, notes: v })} />
               <Button onClick={handleAdd} className="w-full gradient-primary text-primary-foreground">حفظ</Button>
             </div>
           </DialogContent>

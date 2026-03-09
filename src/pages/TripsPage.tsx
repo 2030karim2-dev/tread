@@ -1,46 +1,57 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, MapPin, Calendar } from 'lucide-react';
-import { PageHeader, StatusBadge, EmptyState } from '@/components/shared';
+import { PageHeader, StatusBadge, EmptyState, TextField } from '@/components/shared';
 import { useAppStore } from '@/store/useAppStore';
-import { Trip } from '@/types';
+import { tripSchema, TripFormData } from '@/lib/validations';
 import { EMPTY_MESSAGES } from '@/constants';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { toast } from '@/hooks/use-toast';
+
+const emptyForm = { name: '', country: 'الصين', city: '', start_date: '', end_date: '', notes: '' };
 
 export default function TripsPage() {
   const { trips, addTrip } = useAppStore();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: '', country: 'الصين', city: '', start_date: '', end_date: '', notes: '' });
+  const [form, setForm] = useState(emptyForm);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleAdd = () => {
-    addTrip({ ...form, status: 'planning' });
-    setForm({ name: '', country: 'الصين', city: '', start_date: '', end_date: '', notes: '' });
+    const result = tripSchema.safeParse(form);
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.issues.forEach(issue => { fieldErrors[issue.path[0] as string] = issue.message; });
+      setErrors(fieldErrors);
+      return;
+    }
+    addTrip({ ...result.data, status: 'planning' });
+    setForm(emptyForm);
+    setErrors({});
     setOpen(false);
+    toast({ title: 'تمت الإضافة', description: 'تم إضافة الرحلة بنجاح' });
   };
 
   return (
     <div className="space-y-4">
       <PageHeader title="رحلات الشراء">
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setErrors({}); }}>
           <DialogTrigger asChild>
             <Button className="gradient-primary text-primary-foreground gap-2"><Plus className="w-4 h-4" /> رحلة جديدة</Button>
           </DialogTrigger>
           <DialogContent dir="rtl" className="max-w-md">
             <DialogHeader><DialogTitle>إضافة رحلة جديدة</DialogTitle></DialogHeader>
             <div className="space-y-3 mt-2">
-              <div><Label>اسم الرحلة</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="رحلة قوانغتشو..." /></div>
+              <TextField label="اسم الرحلة" value={form.name} onChange={v => setForm({ ...form, name: v })} placeholder="رحلة قوانغتشو..." error={errors.name} />
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>البلد</Label><Input value={form.country} onChange={e => setForm({ ...form, country: e.target.value })} /></div>
-                <div><Label>المدينة</Label><Input value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} placeholder="قوانغتشو" /></div>
+                <TextField label="البلد" value={form.country} onChange={v => setForm({ ...form, country: v })} error={errors.country} />
+                <TextField label="المدينة" value={form.city} onChange={v => setForm({ ...form, city: v })} placeholder="قوانغتشو" error={errors.city} />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>تاريخ البداية</Label><Input type="date" value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} /></div>
-                <div><Label>تاريخ النهاية</Label><Input type="date" value={form.end_date} onChange={e => setForm({ ...form, end_date: e.target.value })} /></div>
+                <TextField label="تاريخ البداية" value={form.start_date} onChange={v => setForm({ ...form, start_date: v })} type="date" error={errors.start_date} />
+                <TextField label="تاريخ النهاية" value={form.end_date} onChange={v => setForm({ ...form, end_date: v })} type="date" error={errors.end_date} />
               </div>
-              <div><Label>ملاحظات</Label><Input value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
+              <TextField label="ملاحظات" value={form.notes} onChange={v => setForm({ ...form, notes: v })} />
               <Button onClick={handleAdd} className="w-full gradient-primary text-primary-foreground">حفظ الرحلة</Button>
             </div>
           </DialogContent>
