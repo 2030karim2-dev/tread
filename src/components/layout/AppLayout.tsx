@@ -7,6 +7,9 @@ import {
   Settings, RefreshCw
 } from 'lucide-react';
 import logoImg from '@/assets/logo.png';
+import { NotificationBell } from '@/components/shared/NotificationBell';
+import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 const navGroups = [
   {
@@ -95,6 +98,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  useKeyboardShortcuts();
+
   const currentPage = allItems.find(item => item.path === location.pathname)?.label || 'لوحة التحكم';
 
   return (
@@ -120,6 +125,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         <nav className="flex-1 py-1 overflow-y-auto">
           <SidebarNav items={navGroups} />
         </nav>
+
+        {/* Keyboard shortcuts hint */}
+        <div className="mx-4 px-3 py-2 bg-sidebar-accent/50 rounded-lg mb-2">
+          <p className="text-[10px] text-sidebar-foreground/40 text-center">
+            اضغط <kbd className="bg-sidebar-accent px-1 rounded text-[10px] font-mono">Alt+/</kbd> لعرض الاختصارات
+          </p>
+        </div>
 
         {/* Bottom */}
         <div className="mx-4 h-px bg-sidebar-border/50" />
@@ -191,11 +203,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             <div className="flex-1">
               <h2 className="text-base font-bold">{currentPage}</h2>
             </div>
+            <NotificationBell />
           </div>
         </header>
 
         {/* Page Content */}
         <div className="p-4 lg:p-6 pb-24 lg:pb-8">
+          <Breadcrumbs />
           {children}
         </div>
       </main>
@@ -209,7 +223,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex flex-col items-center py-2 px-2 rounded-xl text-[10px] transition-all duration-200 min-w-[56px] ${
+                className={`flex flex-col items-center py-2 px-2 rounded-xl text-[10px] transition-all duration-200 min-w-[56px] active:scale-95 ${
                   isActive
                     ? 'text-primary font-bold'
                     : 'text-muted-foreground'
@@ -224,7 +238,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           })}
           <button
             onClick={() => setSidebarOpen(true)}
-            className="flex flex-col items-center py-2 px-2 rounded-xl text-[10px] text-muted-foreground min-w-[56px]"
+            className="flex flex-col items-center py-2 px-2 rounded-xl text-[10px] text-muted-foreground min-w-[56px] active:scale-95"
           >
             <div className="p-1">
               <Menu className="w-5 h-5" />

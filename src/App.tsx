@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import { ErrorBoundary, LoadingSkeleton } from "@/components/shared";
+import { OnboardingDialog } from "@/components/shared/OnboardingDialog";
 import NotFound from "./pages/NotFound";
 
 // Lazy loaded pages
@@ -33,6 +34,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <OnboardingDialog />
         <AppLayout>
           <ErrorBoundary>
             <Suspense fallback={<PageLoader />}>
