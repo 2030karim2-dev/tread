@@ -25,7 +25,8 @@ export default function SuppliersPage() {
       setErrors(fieldErrors);
       return;
     }
-    addSupplier({ ...result.data, rating: 0, trip_id: '1' });
+    const d = result.data;
+    addSupplier({ name: d.name, company_name: d.company_name, city: d.city, phone: d.phone, wechat_or_whatsapp: d.wechat_or_whatsapp || '', product_category: d.product_category, notes: d.notes || '', rating: 0, trip_id: '1' });
     setForm(emptyForm);
     setErrors({});
     setOpen(false);

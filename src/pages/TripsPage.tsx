@@ -25,7 +25,8 @@ export default function TripsPage() {
       setErrors(fieldErrors);
       return;
     }
-    addTrip({ ...result.data, status: 'planning' });
+    const d = result.data;
+    addTrip({ name: d.name, country: d.country, city: d.city, start_date: d.start_date, end_date: d.end_date, notes: d.notes || '', status: 'planning' });
     setForm(emptyForm);
     setErrors({});
     setOpen(false);
