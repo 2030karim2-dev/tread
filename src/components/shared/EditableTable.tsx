@@ -30,11 +30,38 @@ export function EditableTable<T extends { id: string }>({
   showRowNumbers = true,
   footer,
 }: EditableTableProps<T>) {
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, rowIdx: number, colIdx: number) => {
+    const inputs = document.querySelectorAll<HTMLInputElement>('.editable-table-input');
+    const totalCols = columns.filter(c => c.editable !== false && !c.render).length;
+    let targetIdx = -1;
+
+    if (e.key === 'ArrowDown' || (e.key === 'Enter' && !e.shiftKey)) {
+      e.preventDefault();
+      targetIdx = ((rowIdx + 1) * totalCols) + colIdx;
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      targetIdx = ((rowIdx - 1) * totalCols) + colIdx;
+    } else if (e.key === 'Tab' && !e.shiftKey) {
+      // Let default Tab handle it
+      return;
+    } else if (e.key === 'Tab' && e.shiftKey) {
+      return;
+    }
+
+    if (targetIdx >= 0 && targetIdx < inputs.length) {
+      inputs[targetIdx]?.focus();
+      inputs[targetIdx]?.select();
+    }
+  };
+
+  let inputIndex = 0;
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="bg-card rounded-xl border border-border shadow-sm overflow-x-auto"
+      className="bg-card rounded-xl border border-border shadow-sm overflow-x-auto touch-pan-x"
     >
       <table className="w-full" style={{ minWidth: '700px' }}>
         <thead>
@@ -49,55 +76,61 @@ export function EditableTable<T extends { id: string }>({
           </tr>
         </thead>
         <tbody>
-          {data.map((row, rowIdx) => (
-            <tr key={row.id} className="group hover:bg-muted/30 transition-colors">
-              {showRowNumbers && (
-                <td className="spreadsheet-cell text-center text-muted-foreground font-mono text-xs">
-                  {rowIdx + 1}
-                </td>
-              )}
-              {columns.map(col => {
-                if (col.render) {
-                  return <td key={col.key} className="spreadsheet-cell">{col.render(row, rowIdx)}</td>;
-                }
+          {data.map((row, rowIdx) => {
+            let editableColIdx = 0;
+            return (
+              <tr key={row.id} className="group hover:bg-muted/30 transition-colors">
+                {showRowNumbers && (
+                  <td className="spreadsheet-cell text-center text-muted-foreground font-mono text-xs">
+                    {rowIdx + 1}
+                  </td>
+                )}
+                {columns.map(col => {
+                  if (col.render) {
+                    return <td key={col.key} className="spreadsheet-cell">{col.render(row, rowIdx)}</td>;
+                  }
 
-                const value = (row as Record<string, unknown>)[col.key];
-                const editable = col.editable !== false;
+                  const value = (row as Record<string, unknown>)[col.key];
+                  const editable = col.editable !== false;
 
-                if (!editable) {
+                  if (!editable) {
+                    return (
+                      <td key={col.key} className={`spreadsheet-cell text-sm ${col.align === 'center' ? 'text-center' : ''} ${col.mono ? 'font-mono' : ''}`}>
+                        {String(value ?? '')}
+                      </td>
+                    );
+                  }
+
+                  const currentColIdx = editableColIdx++;
+
                   return (
-                    <td key={col.key} className={`spreadsheet-cell text-sm ${col.align === 'center' ? 'text-center' : ''} ${col.mono ? 'font-mono' : ''}`}>
-                      {String(value ?? '')}
+                    <td key={col.key} className="spreadsheet-cell">
+                      <input
+                        className={`editable-table-input w-full bg-transparent focus:outline-none text-sm ${col.align === 'center' ? 'text-center' : ''} ${col.mono ? 'font-mono' : ''}`}
+                        type={col.type === 'number' ? 'number' : 'text'}
+                        value={col.type === 'number' ? (value as number || '') : String(value ?? '')}
+                        onChange={e => {
+                          const newValue = col.type === 'number' ? Number(e.target.value) : e.target.value;
+                          onCellChange?.(row.id, col.key, newValue);
+                        }}
+                        onKeyDown={e => handleKeyDown(e, rowIdx, currentColIdx)}
+                      />
                     </td>
                   );
-                }
-
-                return (
-                  <td key={col.key} className="spreadsheet-cell">
-                    <input
-                      className={`w-full bg-transparent focus:outline-none text-sm ${col.align === 'center' ? 'text-center' : ''} ${col.mono ? 'font-mono' : ''}`}
-                      type={col.type === 'number' ? 'number' : 'text'}
-                      value={col.type === 'number' ? (value as number || '') : String(value ?? '')}
-                      onChange={e => {
-                        const newValue = col.type === 'number' ? Number(e.target.value) : e.target.value;
-                        onCellChange?.(row.id, col.key, newValue);
-                      }}
-                    />
+                })}
+                {onDeleteRow && (
+                  <td className="spreadsheet-cell text-center">
+                    <button
+                      onClick={() => onDeleteRow(row.id)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-destructive/10 text-destructive"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </td>
-                );
-              })}
-              {onDeleteRow && (
-                <td className="spreadsheet-cell text-center">
-                  <button
-                    onClick={() => onDeleteRow(row.id)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-destructive/10 text-destructive"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </td>
-              )}
-            </tr>
-          ))}
+                )}
+              </tr>
+            );
+          })}
         </tbody>
         {footer && <tfoot>{footer}</tfoot>}
       </table>

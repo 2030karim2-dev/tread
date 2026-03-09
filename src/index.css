@@ -234,3 +234,29 @@
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
+
+/* ===== Mobile touch improvements ===== */
+@media (max-width: 1024px) {
+  .spreadsheet-cell {
+    @apply px-2 py-2.5;
+    min-height: 44px;
+  }
+
+  .spreadsheet-header {
+    @apply px-2 py-2;
+  }
+
+  .spreadsheet-cell input {
+    min-height: 24px;
+    font-size: 16px; /* Prevent iOS zoom on focus */
+  }
+
+  button, a {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* ===== Touch scroll for tables ===== */
+.touch-pan-x {
+  -webkit-overflow-scrolling: touch;
+}
