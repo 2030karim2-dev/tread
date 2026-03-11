@@ -56,8 +56,11 @@ const defaultInvoices: Invoice[] = [
 export default function PurchasesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>(defaultInvoices);
   const [activeId, setActiveId] = useState(defaultInvoices[0].id);
+  const printRef = useRef<HTMLDivElement>(null);
 
   const activeInvoice = invoices.find(inv => inv.id === activeId)!;
+
+  const handlePrint = () => window.print();
 
   const onCellChange = useCallback((id: string, field: string, value: string | number) => {
     setInvoices(prev => prev.map(inv =>
