@@ -112,9 +112,14 @@ export default function PurchasesPage() {
   return (
     <div className="space-y-4">
       <PageHeader title="فواتير الشراء">
-        <Button onClick={addRow} className="gradient-primary text-primary-foreground gap-2">
-          <Plus className="w-4 h-4" /> إضافة صف
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handlePrint} variant="outline" className="gap-2">
+            <Printer className="w-4 h-4" /> طباعة
+          </Button>
+          <Button onClick={addRow} className="gradient-primary text-primary-foreground gap-2">
+            <Plus className="w-4 h-4" /> إضافة صف
+          </Button>
+        </div>
       </PageHeader>
 
       <div className="flex gap-4">
