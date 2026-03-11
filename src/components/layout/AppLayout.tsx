@@ -41,6 +41,7 @@ const navGroups = [
       { path: '/sales', label: 'فواتير البيع', icon: Receipt },
       { path: '/expenses', label: 'المصروفات', icon: DollarSign },
       { path: '/currency', label: 'محول العملات', icon: RefreshCw },
+      { path: '/settings', label: 'الإعدادات', icon: Settings },
     ],
   },
 ];
