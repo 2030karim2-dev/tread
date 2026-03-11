@@ -1,26 +1,19 @@
 import { motion } from 'framer-motion';
-import { StatCard, StatusBadge, StarRating } from '@/components/shared';
+import { StatCard } from '@/components/shared';
 import { useAppStore } from '@/store/useAppStore';
 import { convertCurrency } from '@/lib/currency';
 import { formatNumber } from '@/lib/helpers';
 import { EXPENSE_CATEGORIES } from '@/constants';
+import { Activity, BarChart3, Ship, ShoppingCart, DollarSign, TrendingUp, Warehouse } from 'lucide-react';
 import {
-  DollarSign, ShoppingCart, TrendingUp, Package,
-  Plane, Ship, Users, Warehouse, BarChart3, Activity
-} from 'lucide-react';
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend
-} from 'recharts';
-
-const CHART_COLORS = [
-  'hsl(var(--primary))',
-  'hsl(var(--secondary))',
-  'hsl(var(--accent))',
-  'hsl(var(--info))',
-  'hsl(var(--warning))',
-  'hsl(var(--destructive))',
-];
+  InventoryBarChart,
+  ExpensesPieChart,
+  QuickCounts,
+  ActiveTrips,
+  ShipmentTracking,
+  TopSuppliers,
+  InventoryStatus,
+} from '@/features/dashboard/components';
 
 export default function Dashboard() {
   const { trips, suppliers, shipments, inventory, expenses } = useAppStore();
@@ -103,208 +96,30 @@ export default function Dashboard() {
 
       {/* Charts Section */}
       <div className="grid lg:grid-cols-2 gap-4">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="bg-card rounded-2xl border border-border p-5 shadow-card">
-          <h3 className="font-bold text-sm flex items-center gap-2 mb-4">
-            <BarChart3 className="w-4 h-4 text-primary" />
-            المشتريات مقابل المبيعات
-          </h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={barChartData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                <Tooltip
-                  contentStyle={{
-                    background: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '12px',
-                    fontSize: 12,
-                  }}
-                  formatter={(value: number) => [`$${formatNumber(value)}`, '']}
-                />
-                <Bar dataKey="purchases" name="المشتريات" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="sales" name="المبيعات" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-card rounded-2xl border border-border p-5 shadow-card">
-          <h3 className="font-bold text-sm flex items-center gap-2 mb-4">
-            <DollarSign className="w-4 h-4 text-secondary" />
-            توزيع المصاريف
-          </h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={expensesByCategory}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={90}
-                  paddingAngle={3}
-                  dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  labelLine={false}
-                >
-                  {expensesByCategory.map((_, idx) => (
-                    <Cell key={idx} fill={CHART_COLORS[idx % CHART_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    background: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '12px',
-                    fontSize: 12,
-                  }}
-                  formatter={(value: number) => [`$${value}`, '']}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </motion.div>
+        <InventoryBarChart data={barChartData} />
+        <ExpensesPieChart data={expensesByCategory} />
       </div>
 
       {/* Quick Counts */}
-      <div className="grid grid-cols-4 gap-2 lg:gap-3">
-        {[
-          { label: 'الرحلات', value: trips.length, icon: Plane, color: 'text-primary' },
-          { label: 'الموردين', value: suppliers.length, icon: Users, color: 'text-secondary' },
-          { label: 'الشحنات', value: shipments.length, icon: Ship, color: 'text-info' },
-          { label: 'المنتجات', value: inventory.length, icon: Package, color: 'text-accent' },
-        ].map((item, i) => (
-          <motion.div
-            key={item.label}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.35 + i * 0.05 }}
-            className="bg-card rounded-xl border border-border p-3 shadow-card text-center"
-          >
-            <item.icon className={`w-5 h-5 mx-auto mb-1.5 ${item.color}`} />
-            <p className="text-lg lg:text-xl font-extrabold">{item.value}</p>
-            <p className="text-[10px] text-muted-foreground font-medium">{item.label}</p>
-          </motion.div>
-        ))}
-      </div>
+      <QuickCounts
+        trips={trips.length}
+        suppliers={suppliers.length}
+        shipments={shipments.length}
+        inventory={inventory.length}
+      />
 
       <div className="grid lg:grid-cols-2 gap-4">
         {/* Active Trips */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-card rounded-2xl border border-border p-5 shadow-card">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-sm flex items-center gap-2">
-              <Plane className="w-4 h-4 text-primary" />
-              الرحلات النشطة
-            </h3>
-            <span className="text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{trips.length} رحلة</span>
-          </div>
-          <div className="space-y-2.5">
-            {trips.map(trip => (
-              <div key={trip.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors">
-                <div>
-                  <p className="font-semibold text-sm">{trip.name}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{trip.city} • {trip.start_date}</p>
-                </div>
-                <StatusBadge status={trip.status} />
-              </div>
-            ))}
-          </div>
-        </motion.div>
+        <ActiveTrips trips={trips} />
 
         {/* Shipment Tracking */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }} className="bg-card rounded-2xl border border-border p-5 shadow-card">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-sm flex items-center gap-2">
-              <Ship className="w-4 h-4 text-info" />
-              تتبع الشحنات
-            </h3>
-            <span className="text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{shipments.length} شحنة</span>
-          </div>
-          <div className="space-y-2.5">
-            {shipments.map(shipment => (
-              <div key={shipment.id} className="p-3 rounded-xl bg-muted/40">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="font-semibold text-sm">{shipment.shipment_number}</p>
-                  <StatusBadge status={shipment.status} />
-                </div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span className="font-medium">{shipment.departure_port}</span>
-                  <div className="flex-1 h-px bg-border relative">
-                    <Ship className="w-3 h-3 text-primary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-card rounded" />
-                  </div>
-                  <span className="font-medium">{shipment.arrival_port}</span>
-                </div>
-                <p className="text-[11px] text-muted-foreground mt-1.5">{shipment.shipping_company} • {shipment.cartons_count} كرتون</p>
-              </div>
-            ))}
-          </div>
-        </motion.div>
+        <ShipmentTracking shipments={shipments} />
 
         {/* Top Suppliers */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="bg-card rounded-2xl border border-border p-5 shadow-card">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-sm flex items-center gap-2">
-              <Users className="w-4 h-4 text-secondary" />
-              أفضل الموردين
-            </h3>
-          </div>
-          <div className="space-y-2.5">
-            {[...suppliers].sort((a, b) => b.rating - a.rating).map((sup, i) => (
-              <div key={sup.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/40">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center text-xs font-bold text-primary-foreground">
-                    {i + 1}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-sm">{sup.name}</p>
-                    <p className="text-xs text-muted-foreground">{sup.company_name}</p>
-                  </div>
-                </div>
-                <StarRating rating={sup.rating} />
-              </div>
-            ))}
-          </div>
-        </motion.div>
+        <TopSuppliers suppliers={suppliers} />
 
         {/* Inventory Status */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }} className="bg-card rounded-2xl border border-border p-5 shadow-card">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-sm flex items-center gap-2">
-              <Warehouse className="w-4 h-4 text-accent" />
-              حالة المخزون
-            </h3>
-          </div>
-          <div className="space-y-3">
-            {inventory.map(item => {
-              const pct = Math.round((item.quantity_available / item.quantity_purchased) * 100);
-              const isLow = pct < 30;
-              return (
-                <div key={item.id} className="p-3 rounded-xl bg-muted/40">
-                  <div className="flex justify-between items-center mb-2">
-                    <p className="font-semibold text-sm">{item.product_name}</p>
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                      isLow ? 'bg-destructive/10 text-destructive' : 'bg-accent/10 text-accent'
-                    }`}>
-                      {item.quantity_available} متوفر
-                    </span>
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${pct}%` }}
-                      transition={{ duration: 0.8, ease: 'easeOut' }}
-                      className={`h-full rounded-full ${
-                        pct > 50 ? 'bg-accent' : pct > 20 ? 'bg-secondary' : 'bg-destructive'
-                      }`}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </motion.div>
+        <InventoryStatus inventory={inventory} />
       </div>
     </div>
   );

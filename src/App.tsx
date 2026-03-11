@@ -8,6 +8,8 @@ import AppLayout from "@/components/layout/AppLayout";
 import { ErrorBoundary, LoadingSkeleton } from "@/components/shared";
 import { OnboardingDialog } from "@/components/shared/OnboardingDialog";
 import NotFound from "./pages/NotFound";
+import { useAppModeStore } from "./store/useAppModeStore";
+import { useEffect } from 'react';
 
 // Lazy loaded pages
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -22,6 +24,8 @@ const SalesPage = lazy(() => import("./pages/SalesPage"));
 const ExpensesPage = lazy(() => import("./pages/ExpensesPage"));
 const CurrencyPage = lazy(() => import("./pages/CurrencyPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const PhrasesPage = lazy(() => import("./pages/PhrasesPage"));
+const NotesPage = lazy(() => import("./pages/NotesPage"));
 
 const queryClient = new QueryClient();
 
@@ -29,12 +33,24 @@ function PageLoader() {
   return <LoadingSkeleton rows={4} type="cards" />;
 }
 
+// Component to sync market mode with HTML data attribute
+function MarketModeSync() {
+  const isMarketMode = useAppModeStore((state) => state.isMarketMode);
+
+  useEffect(() => {
+    document.documentElement.dataset.marketMode = isMarketMode ? 'true' : 'false';
+  }, [isMarketMode]);
+
+  return null;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    <MarketModeSync />
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <OnboardingDialog />
         <AppLayout>
           <ErrorBoundary>
@@ -52,6 +68,8 @@ const App = () => (
                 <Route path="/expenses" element={<ExpensesPage />} />
                 <Route path="/currency" element={<CurrencyPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/phrases" element={<PhrasesPage />} />
+                <Route path="/notes" element={<NotesPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

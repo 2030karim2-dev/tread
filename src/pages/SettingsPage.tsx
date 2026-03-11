@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Save, Building2, RefreshCw, Palette } from 'lucide-react';
+import { Save, Building2, RefreshCw, Palette, ShoppingBag, Monitor } from 'lucide-react';
 import { PageHeader } from '@/components/shared';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,12 +8,14 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useThemeStore } from '@/store/useThemeStore';
+import { useAppModeStore } from '@/store/useAppModeStore';
 import { Switch } from '@/components/ui/switch';
 import { Moon, Sun } from 'lucide-react';
 
 export default function SettingsPage() {
   const { toast } = useToast();
   const { isDark, toggle } = useThemeStore();
+  const { isMarketMode, toggleMarketMode } = useAppModeStore();
 
   const [company, setCompany] = useState({
     name: 'AutoParts',
@@ -51,6 +53,7 @@ export default function SettingsPage() {
           <TabsTrigger value="company" className="gap-2"><Building2 className="w-4 h-4" /> الشركة</TabsTrigger>
           <TabsTrigger value="currency" className="gap-2"><RefreshCw className="w-4 h-4" /> العملات</TabsTrigger>
           <TabsTrigger value="appearance" className="gap-2"><Palette className="w-4 h-4" /> المظهر</TabsTrigger>
+          <TabsTrigger value="market" className="gap-2"><ShoppingBag className="w-4 h-4" /> السوق</TabsTrigger>
         </TabsList>
 
         {/* Company Info */}
@@ -121,6 +124,33 @@ export default function SettingsPage() {
               </div>
               <Switch checked={isDark} onCheckedChange={toggle} />
             </div>
+          </motion.div>
+        </TabsContent>
+
+        {/* Market Mode */}
+        <TabsContent value="market">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-2xl border border-border p-6 space-y-5 max-w-md">
+            <h3 className="font-bold text-lg">وضع السوق</h3>
+            <p className="text-sm text-muted-foreground">وضع مخصص للتعامل في الأسواق المزدحمة بأزرار كبيرة وواضحة</p>
+
+            <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
+              <div className="flex items-center gap-3">
+                <ShoppingBag className="w-5 h-5 text-primary" />
+                <div>
+                  <p className="font-semibold text-sm">وضع السوق</p>
+                  <p className="text-xs text-muted-foreground">أزرار كبيرة وتصميم مبسط</p>
+                </div>
+              </div>
+              <Switch checked={isMarketMode} onCheckedChange={toggleMarketMode} />
+            </div>
+
+            {isMarketMode && (
+              <div className="p-4 rounded-xl bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
+                <p className="text-sm text-green-700 dark:text-green-300">
+                  ✅ وضع السوق مفعل - ستظهر الأزرار بحجم أكبر لسهولة الاستخدام
+                </p>
+              </div>
+            )}
           </motion.div>
         </TabsContent>
       </Tabs>

@@ -16,6 +16,8 @@ import {
     DollarSign,
     Settings,
     RefreshCw,
+    BookOpen,
+    StickyNote,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -69,6 +71,8 @@ export const NAV_GROUPS: NavGroup[] = [
             { path: '/sales', label: 'فواتير البيع', icon: Receipt },
             { path: '/expenses', label: 'المصروفات', icon: DollarSign },
             { path: '/currency', label: 'محول العملات', icon: RefreshCw },
+            { path: '/phrases', label: 'دليل المفاوضة', icon: BookOpen },
+            { path: '/notes', label: 'الملاحظات', icon: StickyNote },
             { path: '/settings', label: 'الإعدادات', icon: Settings },
         ],
     },

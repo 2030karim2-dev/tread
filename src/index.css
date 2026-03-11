@@ -95,6 +95,7 @@
 }
 
 @layer utilities {
+
   /* ===== Glass Effects ===== */
   .glass-card {
     @apply bg-card/70 backdrop-blur-2xl border border-border/50;
@@ -106,6 +107,7 @@
   .glass-card-hover {
     @apply glass-card transition-all duration-300;
   }
+
   .glass-card-hover:hover {
     box-shadow:
       0 2px 4px hsl(var(--foreground) / 0.06),
@@ -138,6 +140,7 @@
     position: relative;
     overflow: hidden;
   }
+
   .gradient-card-shine::before {
     content: '';
     position: absolute;
@@ -148,6 +151,7 @@
     background: linear-gradient(90deg, transparent, hsl(0 0% 100% / 0.05), transparent);
     transition: left 0.5s;
   }
+
   .gradient-card-shine:hover::before {
     left: 100%;
   }
@@ -198,6 +202,7 @@
   .nav-active-indicator {
     position: relative;
   }
+
   .nav-active-indicator::before {
     content: '';
     position: absolute;
@@ -248,10 +253,12 @@
 
   .spreadsheet-cell input {
     min-height: 24px;
-    font-size: 16px; /* Prevent iOS zoom on focus */
+    font-size: 16px;
+    /* Prevent iOS zoom on focus */
   }
 
-  button, a {
+  button,
+  a {
     -webkit-tap-highlight-color: transparent;
   }
 }
@@ -261,15 +268,192 @@
   -webkit-overflow-scrolling: touch;
 }
 
+/* ===== Mobile Compact Mode ===== */
+/* Small mobile (< 640px) */
+@media (max-width: 639px) {
+  :root {
+    --mobile-scale: 0.5;
+    --mobile-font-scale: 0.7;
+    --mobile-spacing: 0.5rem;
+    --mobile-radius: 0.5rem;
+    --mobile-button-height: 2rem;
+    --mobile-input-height: 2rem;
+    --mobile-card-padding: 0.75rem;
+  }
+
+  /* Compact typography */
+  .text-4xl {
+    font-size: 1.75rem !important;
+  }
+
+  .text-3xl {
+    font-size: 1.5rem !important;
+  }
+
+  .text-2xl {
+    font-size: 1.25rem !important;
+  }
+
+  .text-xl {
+    font-size: 1rem !important;
+  }
+
+  .text-lg {
+    font-size: 0.9rem !important;
+  }
+
+  .text-base {
+    font-size: 0.85rem !important;
+  }
+
+  .text-sm {
+    font-size: 0.75rem !important;
+  }
+
+  .text-xs {
+    font-size: 0.65rem !important;
+  }
+
+  /* Compact spacing */
+  .p-6 {
+    padding: 0.75rem !important;
+  }
+
+  .p-4 {
+    padding: 0.5rem !important;
+  }
+
+  .p-3 {
+    padding: 0.5rem !important;
+  }
+
+  .gap-4 {
+    gap: 0.5rem !important;
+  }
+
+  .gap-3 {
+    gap: 0.35rem !important;
+  }
+
+  .gap-2 {
+    gap: 0.25rem !important;
+  }
+
+  /* Compact cards */
+  .rounded-2xl {
+    border-radius: 0.75rem !important;
+  }
+
+  .rounded-xl {
+    border-radius: 0.5rem !important;
+  }
+
+  /* Compact buttons */
+  .btn-lg {
+    height: 2.25rem !important;
+    padding: 0 1rem !important;
+    font-size: 0.85rem !important;
+  }
+
+  /* Compact inputs */
+  input,
+  textarea,
+  select {
+    font-size: 14px !important;
+  }
+
+  /* Grid adjustments */
+  .grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .grid-cols-3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .grid-cols-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  /* Hide non-essential elements on mobile */
+  .desktop-only {
+    display: none !important;
+  }
+
+  /* Full width on mobile */
+  .w-full {
+    width: 100% !important;
+  }
+
+  /* Compact table cells */
+  .spreadsheet-cell {
+    padding: 0.35rem 0.5rem !important;
+    font-size: 0.75rem !important;
+    min-height: 2rem !important;
+  }
+
+  /* Mobile navigation */
+  .mobile-nav {
+    display: flex !important;
+  }
+
+  /* Compact Sidebar */
+  .sidebar-collapsed {
+    width: 3rem !important;
+  }
+
+  .sidebar-hidden {
+    transform: translateX(-100%);
+    width: 0 !important;
+    overflow: hidden;
+  }
+}
+
+/* Tablet (640px - 1024px) */
+@media (min-width: 640px) and (max-width: 1023px) {
+  :root {
+    --mobile-scale: 0.75;
+    --mobile-font-scale: 0.9;
+    --mobile-spacing: 0.75rem;
+    --mobile-button-height: 2.25rem;
+    --mobile-input-height: 2.25rem;
+    --mobile-card-padding: 1rem;
+  }
+
+  /* Slightly compact typography */
+  .text-4xl {
+    font-size: 2.25rem !important;
+  }
+
+  .text-3xl {
+    font-size: 1.875rem !important;
+  }
+
+  .text-2xl {
+    font-size: 1.5rem !important;
+  }
+
+  /* Slightly compact spacing */
+  .p-6 {
+    padding: 1rem !important;
+  }
+
+  .gap-4 {
+    gap: 0.75rem !important;
+  }
+}
+
 /* ===== Print Styles ===== */
 @media print {
   body * {
     visibility: hidden !important;
   }
+
   .print-invoice,
   .print-invoice * {
     visibility: visible !important;
   }
+
   .print-invoice {
     position: absolute;
     inset: 0;
@@ -279,4 +463,97 @@
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
+}
+
+/* ===== Market Mode (Large Buttons for Crowded Markets) ===== */
+/* When data-market-mode="true" is set on HTML element */
+/* Note: Using flat selectors to avoid @apply nesting issues */
+
+/* Square card utility - medium size */
+.square-card {
+  width: 6rem;
+  height: 6rem;
+}
+
+/* Square card utility - responsive medium */
+.square-card-md {
+  width: 6rem;
+  height: 6rem;
+}
+
+@media (min-width: 768px) {
+  .square-card-md {
+    width: 7rem;
+    height: 7rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .square-card-md {
+    width: 8rem;
+    height: 8rem;
+  }
+}
+
+/* Larger buttons */
+[data-market-mode='true'] .btn-lg,
+[data-market-mode='true'] button[size="lg"] {
+  height: 3.5rem !important;
+  padding: 0 2rem !important;
+  font-size: 1.25rem !important;
+}
+
+/* Larger default buttons */
+[data-market-mode='true'] button:not([size]),
+[data-market-mode='true'] .btn {
+  height: 2.75rem !important;
+  padding: 0 1.5rem !important;
+  font-size: 1rem !important;
+}
+
+/* Larger inputs */
+[data-market-mode='true'] input,
+[data-market-mode='true'] textarea,
+[data-market-mode='true'] select {
+  height: 3rem !important;
+  font-size: 1.125rem !important;
+  padding: 0.5rem 1rem !important;
+}
+
+/* Larger cards */
+[data-market-mode='true'] .card {
+  padding: 1.5rem !important;
+}
+
+/* Larger text throughout */
+[data-market-mode='true'] .text-lg {
+  font-size: 1.25rem !important;
+}
+
+[data-market-mode='true'] .text-base {
+  font-size: 1.125rem !important;
+}
+
+[data-market-mode='true'] .text-sm {
+  font-size: 1rem !important;
+}
+
+[data-market-mode='true'] .text-xs {
+  font-size: 0.875rem !important;
+}
+
+/* Larger touch targets */
+[data-market-mode='true'] a,
+[data-market-mode='true'] button {
+  min-height: 48px !important;
+  min-width: 48px !important;
+}
+
+/* Increase spacing */
+[data-market-mode='true'] .p-4 {
+  padding: 1.5rem !important;
+}
+
+[data-market-mode='true'] .gap-4 {
+  gap: 1.5rem !important;
 }
