@@ -1,9 +1,15 @@
 /**
  * Generate a simple unique ID (will be replaced by DB UUIDs later)
+ * @deprecated Use generateId from './id' instead
  */
 export function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
+
+/**
+ * @deprecated Use generateId from './id' instead
+ */
+export { generateId as generateLegacyId } from './id';
 
 /**
  * Calculate percentage safely
