@@ -260,3 +260,23 @@
 .touch-pan-x {
   -webkit-overflow-scrolling: touch;
 }
+
+/* ===== Print Styles ===== */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  .print-invoice,
+  .print-invoice * {
+    visibility: visible !important;
+  }
+  .print-invoice {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    background: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

@@ -1,10 +1,11 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, FileText, Receipt } from 'lucide-react';
+import { Plus, FileText, Receipt, Printer } from 'lucide-react';
 import { PageHeader, EditableTable } from '@/components/shared';
 import type { ColumnDef } from '@/components/shared';
 import { formatNumber, generateId } from '@/lib/helpers';
 import { Button } from '@/components/ui/button';
+import { InvoicePrint } from '@/components/shared/InvoicePrint';
 
 interface InvoiceItem {
   id: string;
@@ -55,8 +56,11 @@ const defaultInvoices: Invoice[] = [
 export default function PurchasesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>(defaultInvoices);
   const [activeId, setActiveId] = useState(defaultInvoices[0].id);
+  const printRef = useRef<HTMLDivElement>(null);
 
   const activeInvoice = invoices.find(inv => inv.id === activeId)!;
+
+  const handlePrint = () => window.print();
 
   const onCellChange = useCallback((id: string, field: string, value: string | number) => {
     setInvoices(prev => prev.map(inv =>
@@ -111,9 +115,14 @@ export default function PurchasesPage() {
   return (
     <div className="space-y-4">
       <PageHeader title="فواتير الشراء">
-        <Button onClick={addRow} className="gradient-primary text-primary-foreground gap-2">
-          <Plus className="w-4 h-4" /> إضافة صف
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handlePrint} variant="outline" className="gap-2">
+            <Printer className="w-4 h-4" /> طباعة
+          </Button>
+          <Button onClick={addRow} className="gradient-primary text-primary-foreground gap-2">
+            <Plus className="w-4 h-4" /> إضافة صف
+          </Button>
+        </div>
       </PageHeader>
 
       <div className="flex gap-4">
@@ -163,6 +172,18 @@ export default function PurchasesPage() {
 
           <EditableTable data={activeInvoice.items} columns={columns} onCellChange={onCellChange} footer={footer} />
         </div>
+      </div>
+
+      {/* Hidden print layout */}
+      <div className="hidden print:block">
+        <InvoicePrint
+          ref={printRef}
+          type="purchase"
+          invoiceNumber={activeInvoice.number}
+          date={activeInvoice.date}
+          partyName={activeInvoice.supplier}
+          items={activeInvoice.items.map(i => ({ ...i, price: i.purchase_price }))}
+        />
       </div>
     </div>
   );
