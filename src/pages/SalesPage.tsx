@@ -166,6 +166,18 @@ export default function SalesPage() {
           <EditableTable data={activeInvoice.items} columns={columns} onCellChange={onCellChange} footer={footer} />
         </div>
       </div>
+
+      {/* Hidden print layout */}
+      <div className="hidden print:block">
+        <InvoicePrint
+          ref={printRef}
+          type="sale"
+          invoiceNumber={activeInvoice.number}
+          date={activeInvoice.date}
+          partyName={activeInvoice.customer}
+          items={activeInvoice.items.map(i => ({ ...i, price: i.sale_price }))}
+        />
+      </div>
     </div>
   );
 }
