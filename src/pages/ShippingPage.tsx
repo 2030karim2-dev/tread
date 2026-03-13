@@ -1,8 +1,17 @@
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { PageHeader, StatusBadge } from '@/components/shared';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { PageHeader, StatusBadge, TextField, ConfirmDialog } from '@/components/shared';
 import { useAppStore } from '@/store/useAppStore';
-import { STATUS_LABELS } from '@/constants';
-import { Ship, MapPin, Package, DollarSign, Weight, Calendar, Anchor, Clock, Check, Circle } from 'lucide-react';
+import { STATUS_LABELS, SHIPPING_TYPES } from '@/constants';
+import { shipmentSchema, ShipmentFormData } from '@/lib/validations';
+import { Ship, MapPin, Package, DollarSign, Weight, Calendar, Anchor, Clock, Check, Plus, Edit2, Trash2, MoreVertical } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { toast } from '@/hooks/use-toast';
+import { Shipment } from '@/types';
 
 const TIMELINE_STAGES = ['purchased', 'at_warehouse', 'shipped', 'in_transit', 'arrived', 'delivered'] as const;
 const STAGE_ICONS: Record<string, React.ElementType> = {
@@ -23,17 +32,148 @@ const statusProgress: Record<string, number> = {
   delivered: 100,
 };
 
+const defaultValues: ShipmentFormData = {
+  shipment_number: '', shipping_company: '', shipping_type: 'sea',
+  departure_port: '', arrival_port: '', ship_date: '', expected_arrival_date: '',
+  shipping_cost: 0, weight: 0, cartons_count: 0,
+};
+
 export default function ShippingPage() {
-  const { shipments } = useAppStore();
+  const shipments = useAppStore(s => s.shipments);
+  const addShipment = useAppStore(s => s.addShipment);
+  const updateShipment = useAppStore(s => s.updateShipment);
+  const deleteShipment = useAppStore(s => s.deleteShipment);
+
+  const [open, setOpen] = useState(false);
+  const [editingShipment, setEditingShipment] = useState<Shipment | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const { control, handleSubmit, reset, formState: { errors } } = useForm<ShipmentFormData>({
+    resolver: zodResolver(shipmentSchema),
+    defaultValues,
+  });
+
+  const onSubmit = (d: ShipmentFormData) => {
+    if (editingShipment) {
+      updateShipment(editingShipment.id, d);
+      toast({ title: 'تم التحديث', description: 'تم تحديث الشحنة بنجاح' });
+    } else {
+      addShipment({ ...d, status: 'purchased' });
+      toast({ title: 'تمت الإضافة', description: 'تم إضافة الشحنة بنجاح' });
+    }
+    setEditingShipment(null);
+    setOpen(false);
+  };
+
+  const handleEdit = (shipment: Shipment) => {
+    setEditingShipment(shipment);
+    reset({
+      shipment_number: shipment.shipment_number,
+      shipping_company: shipment.shipping_company,
+      shipping_type: shipment.shipping_type,
+      departure_port: shipment.departure_port,
+      arrival_port: shipment.arrival_port,
+      ship_date: shipment.ship_date,
+      expected_arrival_date: shipment.expected_arrival_date,
+      shipping_cost: shipment.shipping_cost,
+      weight: shipment.weight,
+      cartons_count: shipment.cartons_count,
+    });
+    setOpen(true);
+  };
+
+  const handleDelete = () => {
+    if (deleteId) {
+      deleteShipment(deleteId);
+      toast({ title: 'تم الحذف', description: 'تم حذف الشحنة بنجاح' });
+      setDeleteId(null);
+    }
+  };
+
+  const advanceStatus = (shipment: Shipment) => {
+    const currentIdx = TIMELINE_STAGES.indexOf(shipment.status as typeof TIMELINE_STAGES[number]);
+    if (currentIdx < TIMELINE_STAGES.length - 1) {
+      updateShipment(shipment.id, { status: TIMELINE_STAGES[currentIdx + 1] });
+      toast({ title: 'تم تحديث الحالة', description: `الحالة: ${STATUS_LABELS[TIMELINE_STAGES[currentIdx + 1]]}` });
+    }
+  };
 
   return (
-    <div className="space-y-4">
-      <PageHeader title="إدارة الشحنات" subtitle={`${shipments.length} شحنة`} />
+    <div className="space-y-3 sm:space-y-4 lg:space-y-6">
+      <PageHeader title="إدارة الشحنات" subtitle={`${shipments.length} شحنة`}>
+        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { reset(defaultValues); setEditingShipment(null); } }}>
+          <DialogTrigger asChild>
+            <Button className="gradient-secondary shadow-colored-secondary text-secondary-foreground gap-2 font-bold">
+              <Plus className="w-4 h-4" /> شحنة جديدة
+            </Button>
+          </DialogTrigger>
+          <DialogContent dir="rtl" className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="font-extrabold">
+                {editingShipment ? 'تعديل الشحنة' : 'إضافة شحنة جديدة'}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 mt-2">
+              <div className="grid grid-cols-2 gap-3">
+                <Controller name="shipment_number" control={control} render={({ field }) => (
+                  <TextField label="رقم الشحنة" {...field} error={errors.shipment_number?.message} placeholder="SHP-2025-003" />
+                )} />
+                <Controller name="shipping_company" control={control} render={({ field }) => (
+                  <TextField label="شركة الشحن" {...field} error={errors.shipping_company?.message} placeholder="ميرسك" />
+                )} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground">نوع الشحن</label>
+                  <Controller name="shipping_type" control={control} render={({ field }) => (
+                    <select {...field} className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
+                      {SHIPPING_TYPES.map(t => (
+                        <option key={t.value} value={t.value}>{t.label}</option>
+                      ))}
+                    </select>
+                  )} />
+                </div>
+                <Controller name="shipping_cost" control={control} render={({ field }) => (
+                  <TextField label="التكلفة ($)" value={String(field.value)} onChange={v => field.onChange(Number(v) || 0)} error={errors.shipping_cost?.message} type="number" />
+                )} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Controller name="departure_port" control={control} render={({ field }) => (
+                  <TextField label="ميناء المغادرة" {...field} error={errors.departure_port?.message} placeholder="قوانغتشو" />
+                )} />
+                <Controller name="arrival_port" control={control} render={({ field }) => (
+                  <TextField label="ميناء الوصول" {...field} error={errors.arrival_port?.message} placeholder="عدن" />
+                )} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Controller name="ship_date" control={control} render={({ field }) => (
+                  <TextField label="تاريخ الشحن" {...field} error={errors.ship_date?.message} type="date" />
+                )} />
+                <Controller name="expected_arrival_date" control={control} render={({ field }) => (
+                  <TextField label="تاريخ الوصول المتوقع" {...field} error={errors.expected_arrival_date?.message} type="date" />
+                )} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Controller name="weight" control={control} render={({ field }) => (
+                  <TextField label="الوزن (كغ)" value={String(field.value)} onChange={v => field.onChange(Number(v) || 0)} error={errors.weight?.message} type="number" />
+                )} />
+                <Controller name="cartons_count" control={control} render={({ field }) => (
+                  <TextField label="عدد الكراتين" value={String(field.value)} onChange={v => field.onChange(Number(v) || 0)} error={errors.cartons_count?.message} type="number" />
+                )} />
+              </div>
+              <Button onClick={handleSubmit(onSubmit)} className="w-full gradient-secondary text-secondary-foreground font-bold">
+                {editingShipment ? 'تحديث الشحنة' : 'حفظ الشحنة'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </PageHeader>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-2 sm:gap-3 lg:gap-4 lg:grid-cols-2">
         {shipments.map((s, i) => {
           const progress = statusProgress[s.status] || 0;
           const currentIdx = TIMELINE_STAGES.indexOf(s.status as typeof TIMELINE_STAGES[number]);
+          const canAdvance = currentIdx < TIMELINE_STAGES.length - 1;
 
           return (
             <motion.div
@@ -41,7 +181,7 @@ export default function ShippingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              className="bg-card rounded-2xl border border-border p-5 shadow-card glass-card-hover"
+              className="group bg-card rounded-2xl border border-border p-5 shadow-card glass-card-hover"
             >
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
@@ -53,7 +193,32 @@ export default function ShippingPage() {
                     <p className="text-xs text-muted-foreground">{s.shipping_company}</p>
                   </div>
                 </div>
-                <StatusBadge status={s.status} />
+                <div className="flex items-center gap-2">
+                  <StatusBadge status={s.status} />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-muted transition-all">
+                        <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {canAdvance && (
+                        <DropdownMenuItem onClick={() => advanceStatus(s)}>
+                          <Check className="w-4 h-4 ml-2" />
+                          تقديم الحالة
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem onClick={() => handleEdit(s)}>
+                        <Edit2 className="w-4 h-4 ml-2" />
+                        تعديل
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setDeleteId(s.id)}>
+                        <Trash2 className="w-4 h-4 ml-2" />
+                        حذف
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
 
               {/* Route visualization */}
@@ -170,6 +335,17 @@ export default function ShippingPage() {
           );
         })}
       </div>
+
+      {/* Delete Confirmation */}
+      <ConfirmDialog
+        open={deleteId !== null}
+        onOpenChange={(open) => !open && setDeleteId(null)}
+        title="حذف الشحنة"
+        description="هل أنت متأكد من حذف هذه الشحنة؟ لا يمكن التراجع عن هذا الإجراء."
+        confirmText="حذف"
+        onConfirm={handleDelete}
+        variant="destructive"
+      />
     </div>
   );
 }

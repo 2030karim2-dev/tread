@@ -90,7 +90,7 @@ export default function TripsPage() {
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4 lg:space-y-6">
       <PageHeader title="رحلات الشراء" subtitle={`${trips.length} رحلة مسجلة`}>
         <ExportButton data={trips} columns={exportColumns} filename="رحلات-الشراء" />
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setErrors({}); setEditingTrip(null); setForm(emptyForm); } }}>
@@ -147,7 +147,7 @@ export default function TripsPage() {
       {filteredTrips.length === 0 ? (
         <EmptyState message={search || statusFilter !== 'all' ? 'لا توجد نتائج مطابقة للبحث' : EMPTY_MESSAGES.trips} />
       ) : (
-        <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredTrips.map((trip, i) => (
             <motion.div
               key={trip.id}

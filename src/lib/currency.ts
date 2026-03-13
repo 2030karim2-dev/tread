@@ -1,13 +1,13 @@
 /**
  * Currency Utilities - أدوات تحويل العملات
- * يحتوي على أسعار صرف ثابتة (يجب استبدالها بـ API حقيقي)
+ * يقرأ أسعار الصرف من Store (قابلة للتعديل من الإعدادات)
  */
 
 import { CurrencyCode } from '@/constants';
+import { useAppStore } from '@/store/useAppStore';
 
-// أسعار الصرف الثابتة (يجب استبدالها بـ API حقيقي في الإنتاج)
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const RATES: Record<string, number> = {
+// أسعار الصرف الافتراضية (تُستخدم كقيم احتياطية)
+const DEFAULT_RATES: Record<string, number> = {
   CNY_USD: 0.14,
   CNY_SAR: 0.52,
   USD_CNY: 7.15,
@@ -15,6 +15,31 @@ const RATES: Record<string, number> = {
   SAR_CNY: 1.91,
   SAR_USD: 0.27,
 };
+
+/**
+ * الحصول على أسعار الصرف الحالية من الـ Store
+ */
+function getCurrentRates(): Record<string, number> {
+  try {
+    const storeRates = useAppStore.getState().currencyRates;
+    return storeRates as unknown as Record<string, number>;
+  } catch {
+    return DEFAULT_RATES;
+  }
+}
+
+/**
+ * الحصول على سعر الصرف بين عملتين
+ */
+function getExchangeRate(from: CurrencyCode, to: CurrencyCode): number | null {
+  if (from === to) return 1;
+
+  const rates = getCurrentRates();
+  const key = `${from}_${to}`;
+  const rate = rates[key];
+
+  return rate ?? DEFAULT_RATES[key] ?? null;
+}
 
 /**
  * Error class للعملات
@@ -27,21 +52,6 @@ export class CurrencyError extends Error {
     super(message);
     this.name = 'CurrencyError';
   }
-}
-
-/**
- * الحصول على سعر الصرف بين عملتين
- * @param from - العملة المصدر
- * @param to - العملة الهدف
- * @returns سعر الصرف أو null إذا لم يُعثر عليه
- */
-function getExchangeRate(from: CurrencyCode, to: CurrencyCode): number | null {
-  if (from === to) return 1;
-
-  const key = `${from}_${to}`;
-  const rate = RATES[key];
-
-  return rate ?? null;
 }
 
 /**

@@ -27,6 +27,29 @@ export const expenseSchema = z.object({
   notes: z.string().max(500).optional().default(''),
 });
 
+export const customerSchema = z.object({
+  name: z.string().trim().min(1, 'اسم العميل مطلوب').max(100),
+  company_name: z.string().max(100).optional().default(''),
+  city: z.string().trim().min(1, 'المدينة مطلوبة'),
+  phone: z.string().trim().min(1, 'رقم الهاتف مطلوب'),
+  notes: z.string().max(500).optional().default(''),
+});
+
+export const shipmentSchema = z.object({
+  shipment_number: z.string().trim().min(1, 'رقم الشحنة مطلوب'),
+  shipping_company: z.string().trim().min(1, 'شركة الشحن مطلوبة'),
+  shipping_type: z.enum(['air', 'sea']),
+  departure_port: z.string().trim().min(1, 'ميناء المغادرة مطلوب'),
+  arrival_port: z.string().trim().min(1, 'ميناء الوصول مطلوب'),
+  ship_date: z.string().min(1, 'تاريخ الشحن مطلوب'),
+  expected_arrival_date: z.string().min(1, 'تاريخ الوصول المتوقع مطلوب'),
+  shipping_cost: z.number().min(0, 'التكلفة يجب أن تكون صفر أو أكبر'),
+  weight: z.number().min(0, 'الوزن يجب أن يكون صفر أو أكبر'),
+  cartons_count: z.number().int().min(0, 'عدد الكراتين يجب أن يكون صفر أو أكبر'),
+});
+
 export type TripFormData = z.infer<typeof tripSchema>;
 export type SupplierFormData = z.infer<typeof supplierSchema>;
 export type ExpenseFormData = z.infer<typeof expenseSchema>;
+export type CustomerFormData = z.infer<typeof customerSchema>;
+export type ShipmentFormData = z.infer<typeof shipmentSchema>;

@@ -95,6 +95,8 @@ export interface Shipment {
 
 export interface SalesInvoice {
   id: string;
+  number: string;
+  customer_id: string;
   customer_name: string;
   date: string;
   currency: string;
@@ -110,6 +112,15 @@ export interface SalesInvoiceItem {
   quantity: number;
   sale_price: number;
   size: string;
+  notes: string;
+}
+
+export interface Customer {
+  id: string;
+  name: string;
+  company_name: string;
+  city: string;
+  phone: string;
   notes: string;
 }
 
@@ -139,4 +150,23 @@ export interface CurrencyRate {
   from: string;
   to: string;
   rate: number;
+}
+
+export interface CompanySettings {
+  name: string;
+  owner: string;
+  phone: string;
+  email: string;
+  address: string;
+  taxNumber: string;
+  logo: string;
+}
+
+export interface CurrencyRates {
+  CNY_USD: number;
+  CNY_SAR: number;
+  USD_CNY: number;
+  USD_SAR: number;
+  SAR_CNY: number;
+  SAR_USD: number;
 }

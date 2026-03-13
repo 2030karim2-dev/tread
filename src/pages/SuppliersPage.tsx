@@ -112,7 +112,7 @@ export default function SuppliersPage() {
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4 lg:space-y-6">
       <PageHeader title="الموردين" subtitle={`${suppliers.length} مورد مسجل`}>
         <ExportButton data={suppliers} columns={exportColumns} filename="قائمة-الموردين" />
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { reset(defaultValues); setEditingSupplier(null); } }}>

@@ -96,7 +96,7 @@ export default function ExpensesPage() {
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4 lg:space-y-6">
       <PageHeader title="المصروفات" subtitle={`${expenses.length} مصروف`}>
         <ExportButton data={expenses} columns={exportColumns} filename="المصروفات" />
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setErrors({}); setEditingExpense(null); setForm(emptyForm); } }}>

@@ -58,7 +58,7 @@ export default function ProductsPage() {
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4 lg:space-y-6">
       <PageHeader title="المنتجات" subtitle={`${products.length} منتج`}>
         <ExportButton data={filteredProducts} columns={exportColumns} filename="المنتجات" />
         <Button onClick={() => addProduct(emptyProduct)} className="gradient-primary text-primary-foreground gap-2">

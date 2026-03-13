@@ -26,6 +26,7 @@ const CurrencyPage = lazy(() => import("./pages/CurrencyPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const PhrasesPage = lazy(() => import("./pages/PhrasesPage"));
 const NotesPage = lazy(() => import("./pages/NotesPage"));
+const CustomersPage = lazy(() => import("./pages/CustomersPage"));
 
 const queryClient = new QueryClient();
 
@@ -66,6 +67,7 @@ const App = () => (
                   <Route path="/inventory" element={<InventoryPage />} />
                   <Route path="/sales" element={<SalesPage />} />
                   <Route path="/expenses" element={<ExpensesPage />} />
+                  <Route path="/customers" element={<CustomersPage />} />
                   <Route path="/currency" element={<CurrencyPage />} />
                   <Route path="/settings" element={<SettingsPage />} />
                   <Route path="/phrases" element={<PhrasesPage />} />

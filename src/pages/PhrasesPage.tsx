@@ -28,7 +28,7 @@ export default function PhrasesPage() {
     const [showFilters, setShowFilters] = useState(false);
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4 lg:space-y-6">
             <PageHeader
                 title="📚 دليل المفاوضة"
             />

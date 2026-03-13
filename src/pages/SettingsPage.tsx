@@ -1,6 +1,5 @@
-import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Save, Building2, RefreshCw, Palette, ShoppingBag, Monitor } from 'lucide-react';
+import { Save, Building2, RefreshCw, Palette, ShoppingBag } from 'lucide-react';
 import { PageHeader } from '@/components/shared';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useThemeStore } from '@/store/useThemeStore';
 import { useAppModeStore } from '@/store/useAppModeStore';
+import { useAppStore } from '@/store/useAppStore';
 import { Switch } from '@/components/ui/switch';
 import { Moon, Sun } from 'lucide-react';
 
@@ -17,38 +17,36 @@ export default function SettingsPage() {
   const { isDark, toggle } = useThemeStore();
   const { isMarketMode, toggleMarketMode } = useAppModeStore();
 
-  const [company, setCompany] = useState({
-    name: 'AutoParts',
-    owner: 'مدير النظام',
-    phone: '+966 50 000 0000',
-    email: 'info@autoparts.sa',
-    address: 'الرياض، المملكة العربية السعودية',
-    taxNumber: '300000000000003',
-    logo: '',
-  });
+  // Read from store (persisted)
+  const companySettings = useAppStore(s => s.companySettings);
+  const currencyRates = useAppStore(s => s.currencyRates);
+  const updateCompanySettings = useAppStore(s => s.updateCompanySettings);
+  const updateCurrencyRates = useAppStore(s => s.updateCurrencyRates);
 
-  const [rates, setRates] = useState({
-    CNY_USD: '0.14',
-    CNY_SAR: '0.52',
-    USD_CNY: '7.15',
-    USD_SAR: '3.75',
-    SAR_CNY: '1.91',
-    SAR_USD: '0.27',
-  });
+  const handleCompanyChange = (key: string, value: string) => {
+    updateCompanySettings({ [key]: value });
+  };
+
+  const handleRateChange = (key: string, value: string) => {
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue)) {
+      updateCurrencyRates({ [key]: numValue });
+    }
+  };
 
   const saveCompany = () => {
     toast({ title: 'تم الحفظ', description: 'تم حفظ معلومات الشركة بنجاح' });
   };
 
   const saveRates = () => {
-    toast({ title: 'تم الحفظ', description: 'تم تحديث أسعار الصرف بنجاح' });
+    toast({ title: 'تم الحفظ', description: 'تم تحديث أسعار الصرف بنجاح — ستنعكس التغييرات فوراً في محول العملات' });
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4 lg:space-y-6">
       <PageHeader title="الإعدادات" />
 
-      <Tabs defaultValue="company" className="space-y-4">
+      <Tabs defaultValue="company" className="space-y-3 sm:space-y-4 lg:space-y-6">
         <TabsList className="bg-muted/50">
           <TabsTrigger value="company" className="gap-2"><Building2 className="w-4 h-4" /> الشركة</TabsTrigger>
           <TabsTrigger value="currency" className="gap-2"><RefreshCw className="w-4 h-4" /> العملات</TabsTrigger>
@@ -70,12 +68,12 @@ export default function SettingsPage() {
               ] as const).map(([key, label]) => (
                 <div key={key} className="space-y-1.5">
                   <Label className="text-xs font-semibold text-muted-foreground">{label}</Label>
-                  <Input value={company[key]} onChange={e => setCompany({ ...company, [key]: e.target.value })} />
+                  <Input value={companySettings[key]} onChange={e => handleCompanyChange(key, e.target.value)} />
                 </div>
               ))}
               <div className="sm:col-span-2 space-y-1.5">
                 <Label className="text-xs font-semibold text-muted-foreground">العنوان</Label>
-                <Input value={company.address} onChange={e => setCompany({ ...company, address: e.target.value })} />
+                <Input value={companySettings.address} onChange={e => handleCompanyChange('address', e.target.value)} />
               </div>
             </div>
             <Button onClick={saveCompany} className="gradient-primary text-primary-foreground gap-2">
@@ -88,7 +86,7 @@ export default function SettingsPage() {
         <TabsContent value="currency">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-2xl border border-border p-6 space-y-5 max-w-2xl">
             <h3 className="font-bold text-lg">أسعار الصرف</h3>
-            <p className="text-xs text-muted-foreground">أدخل أسعار الصرف المستخدمة في حسابات النظام</p>
+            <p className="text-xs text-muted-foreground">أدخل أسعار الصرف المستخدمة في حسابات النظام — التغييرات تنعكس فوراً</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {([
                 ['CNY_USD', 'يوان → دولار'],
@@ -100,7 +98,13 @@ export default function SettingsPage() {
               ] as const).map(([key, label]) => (
                 <div key={key} className="space-y-1.5">
                   <Label className="text-xs font-semibold text-muted-foreground">{label}</Label>
-                  <Input type="number" step="0.01" value={rates[key]} onChange={e => setRates({ ...rates, [key]: e.target.value })} className="font-mono" />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={currencyRates[key]}
+                    onChange={e => handleRateChange(key, e.target.value)}
+                    className="font-mono"
+                  />
                 </div>
               ))}
             </div>

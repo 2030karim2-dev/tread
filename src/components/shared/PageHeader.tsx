@@ -12,7 +12,7 @@ export function PageHeader({ title, subtitle, children }: PageHeaderProps) {
     <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex items-center justify-between mb-5"
+      className="flex items-center justify-between mb-2"
     >
       <div>
         <h3 className="text-lg lg:text-xl font-extrabold tracking-tight">{title}</h3>

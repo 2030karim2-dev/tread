@@ -1,100 +1,111 @@
 import { useState, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, FileText, Receipt, Printer } from 'lucide-react';
-import { PageHeader, EditableTable } from '@/components/shared';
+import { Plus, FileText, Printer, Trash2 } from 'lucide-react';
+import { PageHeader, EditableTable, ConfirmDialog } from '@/components/shared';
 import type { ColumnDef } from '@/components/shared';
 import { formatNumber, generateId } from '@/lib/helpers';
 import { Button } from '@/components/ui/button';
 import { InvoicePrint } from '@/components/shared/InvoicePrint';
-
-interface InvoiceItem {
-  id: string;
-  product_name: string;
-  oem_number: string;
-  brand: string;
-  quantity: number;
-  purchase_price: number;
-  sale_price: number;
-  size: string;
-}
-
-interface Invoice {
-  id: string;
-  number: string;
-  supplier: string;
-  trip: string;
-  date: string;
-  items: InvoiceItem[];
-}
-
-const defaultInvoices: Invoice[] = [
-  {
-    id: '1',
-    number: 'INV-2025-001',
-    supplier: 'Guangzhou Auto Parts Co.',
-    trip: 'قوانغتشو يناير 2025',
-    date: '2025-01-20',
-    items: [
-      { id: '1', product_name: 'فلتر زيت تويوتا', oem_number: '04152-YZZA1', brand: 'Toyota', quantity: 500, purchase_price: 8, sale_price: 15, size: 'قياسي' },
-      { id: '2', product_name: 'فلتر هواء كامري', oem_number: '17801-0H050', brand: 'Toyota', quantity: 300, purchase_price: 12, sale_price: 25, size: 'كبير' },
-      { id: '3', product_name: 'تيل فرامل أمامي', oem_number: '04465-33471', brand: 'Toyota', quantity: 200, purchase_price: 18, sale_price: 35, size: 'أمامي' },
-    ],
-  },
-  {
-    id: '2',
-    number: 'INV-2025-002',
-    supplier: 'Shanghai Brake Systems',
-    trip: 'قوانغتشو يناير 2025',
-    date: '2025-01-22',
-    items: [
-      { id: '4', product_name: 'شمعات إشعال', oem_number: '90919-01253', brand: 'Denso', quantity: 1000, purchase_price: 5, sale_price: 12, size: 'قياسي' },
-      { id: '5', product_name: 'سير مكيف', oem_number: '99332-10960', brand: 'Gates', quantity: 150, purchase_price: 10, sale_price: 22, size: '6PK1060' },
-    ],
-  },
-];
+import { useAppStore, StorePurchaseInvoice, StorePurchaseInvoiceItem } from '@/store/useAppStore';
+import { toast } from '@/hooks/use-toast';
 
 export default function PurchasesPage() {
-  const [invoices, setInvoices] = useState<Invoice[]>(defaultInvoices);
-  const [activeId, setActiveId] = useState(defaultInvoices[0].id);
+  const invoices = useAppStore(s => s.purchaseInvoices);
+  const suppliers = useAppStore(s => s.suppliers);
+  const trips = useAppStore(s => s.trips);
+  const addPurchaseInvoice = useAppStore(s => s.addPurchaseInvoice);
+  const updatePurchaseInvoice = useAppStore(s => s.updatePurchaseInvoice);
+  const deletePurchaseInvoice = useAppStore(s => s.deletePurchaseInvoice);
+
+  const [activeId, setActiveId] = useState(invoices[0]?.id || '');
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
 
-  const activeInvoice = invoices.find(inv => inv.id === activeId)!;
+  const activeInvoice = invoices.find(inv => inv.id === activeId) || invoices[0];
+  if (!activeInvoice) {
+    return (
+      <div className="space-y-4">
+        <PageHeader title="فواتير الشراء">
+          <Button onClick={addInvoiceHandler} className="gradient-primary text-primary-foreground gap-2">
+            <Plus className="w-4 h-4" /> فاتورة جديدة
+          </Button>
+        </PageHeader>
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="text-6xl mb-4">📋</div>
+          <h3 className="text-lg font-semibold mb-2">لا توجد فواتير شراء</h3>
+          <p className="text-muted-foreground">أضف أول فاتورة شراء لبدء التتبع</p>
+        </div>
+      </div>
+    );
+  }
 
-  const handlePrint = () => window.print();
-
-  const onCellChange = useCallback((id: string, field: string, value: string | number) => {
-    setInvoices(prev => prev.map(inv =>
-      inv.id === activeId
-        ? { ...inv, items: inv.items.map(item => item.id === id ? { ...item, [field]: value } : item) }
-        : inv
-    ));
-  }, [activeId]);
-
-  const addRow = () => {
-    setInvoices(prev => prev.map(inv =>
-      inv.id === activeId
-        ? { ...inv, items: [...inv.items, { id: generateId(), product_name: '', oem_number: '', brand: '', quantity: 0, purchase_price: 0, sale_price: 0, size: '' }] }
-        : inv
-    ));
-  };
-
-  const addInvoice = () => {
+  function addInvoiceHandler() {
     const num = invoices.length + 1;
-    const newInv: Invoice = {
-      id: generateId(),
+    const newInv: Omit<StorePurchaseInvoice, 'id'> = {
       number: `INV-2025-${String(num).padStart(3, '0')}`,
-      supplier: 'مورد جديد',
-      trip: '',
+      supplier_id: '', supplier_name: 'مورد جديد',
+      trip_id: '', trip_name: '',
       date: new Date().toISOString().split('T')[0],
       items: [],
     };
-    setInvoices([...invoices, newInv]);
-    setActiveId(newInv.id);
+    addPurchaseInvoice(newInv);
+    toast({ title: 'تمت الإضافة', description: 'تم إنشاء فاتورة جديدة' });
+  }
+
+  const handlePrint = () => window.print();
+
+  const onCellChange = useCallback((itemId: string, field: string, value: string | number) => {
+    if (!activeInvoice) return;
+    const updatedItems = activeInvoice.items.map(item =>
+      item.id === itemId ? { ...item, [field]: value } : item
+    );
+    updatePurchaseInvoice(activeInvoice.id, { items: updatedItems });
+  }, [activeInvoice, updatePurchaseInvoice]);
+
+  const addRow = () => {
+    if (!activeInvoice) return;
+    const newItem: StorePurchaseInvoiceItem = {
+      id: generateId(), product_name: '', oem_number: '', brand: '',
+      quantity: 0, purchase_price: 0, sale_price: 0, size: '',
+    };
+    updatePurchaseInvoice(activeInvoice.id, { items: [...activeInvoice.items, newItem] });
+  };
+
+  const deleteRow = (itemId: string) => {
+    if (!activeInvoice) return;
+    updatePurchaseInvoice(activeInvoice.id, { items: activeInvoice.items.filter(i => i.id !== itemId) });
+  };
+
+  const handleDeleteInvoice = () => {
+    if (deleteId) {
+      deletePurchaseInvoice(deleteId);
+      if (activeId === deleteId) {
+        setActiveId(invoices.find(i => i.id !== deleteId)?.id || '');
+      }
+      toast({ title: 'تم الحذف', description: 'تم حذف الفاتورة بنجاح' });
+      setDeleteId(null);
+    }
+  };
+
+  const handleSupplierChange = (supplierId: string) => {
+    const supplier = suppliers.find(s => s.id === supplierId);
+    updatePurchaseInvoice(activeInvoice.id, {
+      supplier_id: supplierId,
+      supplier_name: supplier?.name || '',
+    });
+  };
+
+  const handleTripChange = (tripId: string) => {
+    const trip = trips.find(t => t.id === tripId);
+    updatePurchaseInvoice(activeInvoice.id, {
+      trip_id: tripId,
+      trip_name: trip?.name || '',
+    });
   };
 
   const total = activeInvoice.items.reduce((s, i) => s + i.quantity * i.purchase_price, 0);
 
-  const columns: ColumnDef<InvoiceItem>[] = [
+  const columns: ColumnDef<StorePurchaseInvoiceItem>[] = [
     { key: 'product_name', header: 'المنتج', minWidth: '140px' },
     { key: 'oem_number', header: 'رقم OEM', minWidth: '110px', mono: true },
     { key: 'brand', header: 'العلامة', minWidth: '80px' },
@@ -113,7 +124,7 @@ export default function PurchasesPage() {
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4 lg:space-y-6">
       <PageHeader title="فواتير الشراء">
         <div className="flex gap-2">
           <Button onClick={handlePrint} variant="outline" className="gap-2">
@@ -127,8 +138,8 @@ export default function PurchasesPage() {
 
       <div className="flex gap-4">
         {/* Sidebar */}
-        <div className="w-64 shrink-0 space-y-2">
-          <Button onClick={addInvoice} variant="outline" className="w-full gap-2 mb-2">
+        <div className="w-64 shrink-0 space-y-2 hidden md:block">
+          <Button onClick={addInvoiceHandler} variant="outline" className="w-full gap-2 mb-2">
             <Plus className="w-4 h-4" /> فاتورة جديدة
           </Button>
           {invoices.map((inv, i) => (
@@ -138,7 +149,7 @@ export default function PurchasesPage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.05 }}
               onClick={() => setActiveId(inv.id)}
-              className={`w-full text-right p-3 rounded-xl border transition-all ${
+              className={`w-full text-right p-3 rounded-xl border transition-all group/card ${
                 inv.id === activeId
                   ? 'bg-primary/10 border-primary/30 shadow-sm'
                   : 'bg-card border-border hover:bg-muted/50'
@@ -150,27 +161,73 @@ export default function PurchasesPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-xs truncate">{inv.number}</p>
-                  <p className="text-[10px] text-muted-foreground truncate">{inv.supplier}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{inv.supplier_name}</p>
                   <p className="text-[10px] text-muted-foreground">{inv.date}</p>
                 </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setDeleteId(inv.id); }}
+                  className="p-1 rounded opacity-0 group-hover/card:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-all"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
               </div>
             </motion.button>
           ))}
         </div>
 
+        {/* Mobile invoice selector */}
+        <div className="md:hidden w-full">
+          <select
+            value={activeId}
+            onChange={e => setActiveId(e.target.value)}
+            className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm mb-3"
+          >
+            {invoices.map(inv => (
+              <option key={inv.id} value={inv.id}>{inv.number} — {inv.supplier_name}</option>
+            ))}
+          </select>
+        </div>
+
         {/* Main content */}
-        <div className="flex-1 space-y-4 min-w-0">
+        <div className="flex-1 space-y-3 sm:space-y-4 lg:space-y-6 min-w-0">
           <div className="bg-card rounded-xl border border-border p-4 shadow-sm">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 mb-3">
               <div className="p-2 rounded-lg gradient-secondary"><FileText className="w-4 h-4 text-secondary-foreground" /></div>
               <div>
                 <h4 className="font-bold text-sm">فاتورة شراء #{activeInvoice.number}</h4>
-                <p className="text-xs text-muted-foreground">المورد: {activeInvoice.supplier} • الرحلة: {activeInvoice.trip}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div>
+                <label className="text-muted-foreground text-[10px]">المورد</label>
+                <select
+                  value={activeInvoice.supplier_id}
+                  onChange={e => handleSupplierChange(e.target.value)}
+                  className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs"
+                >
+                  <option value="">اختر المورد</option>
+                  {suppliers.map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-muted-foreground text-[10px]">الرحلة</label>
+                <select
+                  value={activeInvoice.trip_id}
+                  onChange={e => handleTripChange(e.target.value)}
+                  className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs"
+                >
+                  <option value="">اختر الرحلة</option>
+                  {trips.map(t => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>
 
-          <EditableTable data={activeInvoice.items} columns={columns} onCellChange={onCellChange} footer={footer} />
+          <EditableTable data={activeInvoice.items} columns={columns} onCellChange={onCellChange} onDeleteRow={deleteRow} footer={footer} />
         </div>
       </div>
 
@@ -181,10 +238,20 @@ export default function PurchasesPage() {
           type="purchase"
           invoiceNumber={activeInvoice.number}
           date={activeInvoice.date}
-          partyName={activeInvoice.supplier}
+          partyName={activeInvoice.supplier_name}
           items={activeInvoice.items.map(i => ({ ...i, price: i.purchase_price }))}
         />
       </div>
+
+      <ConfirmDialog
+        open={deleteId !== null}
+        onOpenChange={(open) => !open && setDeleteId(null)}
+        title="حذف الفاتورة"
+        description="هل أنت متأكد من حذف هذه الفاتورة؟ لا يمكن التراجع عن هذا الإجراء."
+        confirmText="حذف"
+        onConfirm={handleDeleteInvoice}
+        variant="destructive"
+      />
     </div>
   );
 }

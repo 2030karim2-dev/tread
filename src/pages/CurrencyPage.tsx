@@ -23,7 +23,7 @@ export default function CurrencyPage() {
   const symbol = getCurrencySymbol(selectedCurrency);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5 lg:space-y-6">
       <PageHeader title="محول العملات" subtitle="تحويل بين اليوان الصيني والدولار الأمريكي والريال السعودي" />
 
       <div className="grid lg:grid-cols-2 gap-4">

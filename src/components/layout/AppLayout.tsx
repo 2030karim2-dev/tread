@@ -1,14 +1,13 @@
-import { ReactNode, useState } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { ReactNode, useState, useRef } from 'react';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Plane, Users, Package, FileText, Ship,
   Warehouse, ShoppingCart, Receipt, DollarSign, Menu, X,
-  Settings, RefreshCw
+  Settings, RefreshCw, Search, Home, ChevronLeft
 } from 'lucide-react';
 import logoImg from '@/assets/logo.png';
 import { NotificationBell } from '@/components/shared/NotificationBell';
-import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 const navGroups = [
@@ -39,6 +38,7 @@ const navGroups = [
     label: 'المبيعات والمالية',
     items: [
       { path: '/sales', label: 'فواتير البيع', icon: Receipt },
+      { path: '/customers', label: 'العملاء', icon: Users },
       { path: '/expenses', label: 'المصروفات', icon: DollarSign },
       { path: '/currency', label: 'محول العملات', icon: RefreshCw },
       { path: '/settings', label: 'الإعدادات', icon: Settings },
@@ -48,7 +48,6 @@ const navGroups = [
 
 const allItems = navGroups.flatMap(g => g.items);
 
-// Dynamically find items by path to ensure robust mobile navigation
 const getNavItem = (path: string) => allItems.find(item => item.path === path);
 
 const bottomNavItems = [
@@ -58,6 +57,30 @@ const bottomNavItems = [
   getNavItem('/shipping'),
   getNavItem('/inventory'),
 ].filter(Boolean) as typeof allItems;
+
+// Breadcrumb grouping
+const PAGE_GROUPS: Record<string, { label: string; path?: string }> = {
+  '/trips': { label: 'الرئيسية', path: '/' },
+  '/suppliers': { label: 'المشتريات' },
+  '/products': { label: 'المشتريات' },
+  '/quotations': { label: 'المشتريات' },
+  '/purchases': { label: 'المشتريات' },
+  '/shipping': { label: 'اللوجستيات' },
+  '/inventory': { label: 'اللوجستيات' },
+  '/sales': { label: 'المبيعات والمالية' },
+  '/customers': { label: 'المبيعات والمالية' },
+  '/expenses': { label: 'المبيعات والمالية' },
+  '/currency': { label: 'المبيعات والمالية' },
+  '/settings': { label: 'الإعدادات' },
+};
+
+// Quick nav shortcuts for header
+const HEADER_SHORTCUTS = [
+  { path: '/', label: 'الرئيسية', icon: Home },
+  { path: '/inventory', label: 'المخزون', icon: Warehouse },
+  { path: '/purchases', label: 'المشتريات', icon: ShoppingCart },
+  { path: '/sales', label: 'المبيعات', icon: Receipt },
+];
 
 function SidebarNav({ items, onNavigate }: { items: typeof navGroups; onNavigate?: () => void }) {
   const location = useLocation();
@@ -107,6 +130,141 @@ function SidebarNav({ items, onNavigate }: { items: typeof navGroups; onNavigate
         </div>
       ))}
     </div>
+  );
+}
+
+// Inline Breadcrumbs (integrated into header)
+function InlineBreadcrumbs({ currentPath, pageName }: { currentPath: string; pageName: string }) {
+  if (currentPath === '/') return null;
+  const group = PAGE_GROUPS[currentPath];
+
+  return (
+    <nav className="flex items-center gap-1 text-[10px] text-muted-foreground">
+      <Link to="/" className="flex items-center gap-0.5 hover:text-foreground transition-colors">
+        <Home className="w-2.5 h-2.5" />
+        <span>الرئيسية</span>
+      </Link>
+      {group && (
+        <>
+          <ChevronLeft className="w-2.5 h-2.5" />
+          {group.path ? (
+            <Link to={group.path} className="hover:text-foreground transition-colors">{group.label}</Link>
+          ) : (
+            <span>{group.label}</span>
+          )}
+        </>
+      )}
+      <ChevronLeft className="w-2.5 h-2.5" />
+      <span className="text-foreground font-medium">{pageName}</span>
+    </nav>
+  );
+}
+
+// Quick Search
+function QuickSearch() {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
+
+  const results = query.length > 0
+    ? allItems.filter(item =>
+        item.label.includes(query) ||
+        item.path.includes(query.toLowerCase())
+      )
+    : [];
+
+  const handleSelect = (path: string) => {
+    navigate(path);
+    setOpen(false);
+    setQuery('');
+  };
+
+  return (
+    <>
+      <button
+        onClick={() => { setOpen(true); setTimeout(() => inputRef.current?.focus(), 100); }}
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-muted/60 hover:bg-muted border border-border/50 text-muted-foreground text-xs transition-all"
+      >
+        <Search className="w-3.5 h-3.5" />
+        <span className="hidden sm:inline">بحث...</span>
+        <kbd className="hidden md:inline text-[9px] bg-background/60 px-1 py-0.5 rounded font-mono border border-border/50">Ctrl+K</kbd>
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-foreground/40 backdrop-blur-sm z-[60]"
+              onClick={() => { setOpen(false); setQuery(''); }}
+            />
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              className="fixed top-[15%] left-1/2 -translate-x-1/2 w-[90%] max-w-md bg-card rounded-2xl shadow-2xl border border-border z-[61] overflow-hidden"
+              dir="rtl"
+            >
+              <div className="flex items-center gap-2 p-3 border-b border-border">
+                <Search className="w-4 h-4 text-muted-foreground shrink-0" />
+                <input
+                  ref={inputRef}
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                  placeholder="ابحث عن صفحة أو ميزة..."
+                  className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/50"
+                  onKeyDown={e => {
+                    if (e.key === 'Escape') { setOpen(false); setQuery(''); }
+                    if (e.key === 'Enter' && results.length > 0 && results[0]) handleSelect(results[0].path);
+                  }}
+                />
+                <button onClick={() => { setOpen(false); setQuery(''); }} className="p-1 rounded hover:bg-muted">
+                  <X className="w-3.5 h-3.5 text-muted-foreground" />
+                </button>
+              </div>
+              <div className="max-h-[300px] overflow-y-auto p-1">
+                {results.length > 0 ? (
+                  results.map(item => (
+                    <button
+                      key={item.path}
+                      onClick={() => handleSelect(item.path)}
+                      className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-muted text-right transition-colors"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <item.icon className="w-4 h-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">{item.label}</p>
+                        <p className="text-[10px] text-muted-foreground">{item.path}</p>
+                      </div>
+                    </button>
+                  ))
+                ) : query.length > 0 ? (
+                  <p className="text-center text-xs text-muted-foreground py-6">لا توجد نتائج</p>
+                ) : (
+                  <div className="p-2">
+                    <p className="text-[10px] text-muted-foreground mb-2 px-2">الصفحات المتوفرة</p>
+                    {allItems.map(item => (
+                      <button
+                        key={item.path}
+                        onClick={() => handleSelect(item.path)}
+                        className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted text-right transition-colors"
+                      >
+                        <item.icon className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-xs">{item.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
 
@@ -226,35 +384,64 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         )}
       </AnimatePresence>
 
-      {/* Main Content */}
-      <motion.main 
-        animate={{ 
-          marginRight: isCollapsed ? 0 : 150 
-        }}
-        className="flex-1 min-w-0"
+      {/* Main Content — no margin on mobile, margin only on lg when sidebar visible */}
+      <main 
+        className={`flex-1 min-w-0 transition-[margin] duration-300 ${
+          isCollapsed ? '' : 'lg:mr-[150px]'
+        }`}
       >
-        {/* Top Bar */}
-        <header className="sticky top-0 z-30 bg-background/70 backdrop-blur-2xl border-b border-border/60">
-          <div className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 flex items-center gap-2 sm:gap-3">
+        {/* ===== Improved Top Bar ===== */}
+        <header className="sticky top-0 z-30 bg-gradient-to-l from-primary/5 via-background/95 to-background/95 backdrop-blur-2xl border-b border-border/40 shadow-sm">
+          <div className="px-3 lg:px-5 py-1.5 flex items-center gap-2">
+            {/* Mobile menu toggle */}
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 -mr-2 rounded-xl hover:bg-muted transition-colors"
+              className="lg:hidden p-1.5 -mr-1 rounded-lg hover:bg-primary/10 text-primary transition-colors"
             >
               <Menu className="w-5 h-5" />
             </button>
-            <div className="flex-1">
-              <h2 className="text-sm sm:text-base font-bold">{currentPage}</h2>
+
+            {/* Page title + breadcrumbs */}
+            <div className="flex-1 min-w-0">
+              <h2 className="text-sm font-bold leading-tight">{currentPage}</h2>
+              <InlineBreadcrumbs currentPath={location.pathname} pageName={currentPage} />
             </div>
+
+            {/* Quick nav shortcuts (desktop only) */}
+            <div className="hidden lg:flex items-center gap-1 mr-2">
+              {HEADER_SHORTCUTS.map(item => {
+                const isActive = location.pathname === item.path;
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium transition-all ${
+                      isActive
+                        ? 'bg-primary/15 text-primary'
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                    }`}
+                    title={item.label}
+                  >
+                    <item.icon className="w-3 h-3" />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Search */}
+            <QuickSearch />
+
+            {/* Notifications */}
             <NotificationBell />
           </div>
         </header>
 
-        {/* Page Content */}
-        <div className="p-2 sm:p-4 lg:p-6 pb-20 sm:pb-24 lg:pb-8">
-          <Breadcrumbs />
+        {/* Page Content — reduced spacing, no separate breadcrumb */}
+        <div className="px-2 sm:px-3 lg:px-5 pt-2 pb-20 lg:pb-6">
           {children}
         </div>
-      </motion.main>
+      </main>
 
       {/* Mobile Bottom Navigation */}
       <nav className="lg:hidden fixed bottom-0 inset-x-0 bg-card/90 backdrop-blur-2xl border-t border-border/60 z-30 safe-area-bottom">
