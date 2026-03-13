@@ -19,13 +19,13 @@ export function InventoryBarChart({ data }: InventoryBarChartProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25 }}
-            className="bg-card rounded-2xl border border-border p-5 shadow-card"
+            className="bg-card rounded-xl sm:rounded-2xl border border-border p-3 sm:p-5 shadow-card"
         >
-            <h3 className="font-bold text-sm flex items-center gap-2 mb-4">
-                <BarChart3 className="w-4 h-4 text-primary" />
+            <h3 className="font-bold text-[10px] sm:text-sm flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-4">
+                <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
                 المشتريات مقابل المبيعات
             </h3>
-            <div className="h-64">
+            <div className="h-40 sm:h-64">
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={data} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />

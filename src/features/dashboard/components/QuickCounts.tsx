@@ -24,18 +24,18 @@ export function QuickCounts({ trips, suppliers, shipments, inventory }: QuickCou
     ];
 
     return (
-        <div className="grid grid-cols-4 gap-2 lg:gap-3">
+        <div className="grid grid-cols-4 gap-1.5 sm:gap-2 lg:gap-3">
             {items.map((item, i) => (
                 <motion.div
                     key={item.label}
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.35 + i * 0.05 }}
-                    className="bg-card rounded-xl border border-border p-3 shadow-card text-center"
+                    className="bg-card rounded-lg sm:rounded-xl border border-border p-1.5 sm:p-3 shadow-card text-center"
                 >
-                    <item.icon className={`w-5 h-5 mx-auto mb-1.5 ${item.color}`} />
-                    <p className="text-lg lg:text-xl font-extrabold">{item.value}</p>
-                    <p className="text-[10px] text-muted-foreground font-medium">{item.label}</p>
+                    <item.icon className={`w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 sm:mb-1.5 ${item.color}`} />
+                    <p className="text-sm sm:text-lg lg:text-xl font-extrabold">{item.value}</p>
+                    <p className="text-[9px] sm:text-[10px] text-muted-foreground font-medium">{item.label}</p>
                 </motion.div>
             ))}
         </div>

@@ -47,23 +47,24 @@ export function StatCard({ title, value, icon: Icon, trend, trendUp, variant = '
       initial={{ opacity: 0, y: 20, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ delay, duration: 0.4, ease: 'easeOut' }}
-      className={`rounded-2xl p-4 lg:p-5 ${config.card}`}
+      className={`rounded-xl sm:rounded-2xl p-2.5 sm:p-4 lg:p-5 ${config.card}`}
     >
-      <div className="flex items-start justify-between mb-3">
-        <span className={`text-xs lg:text-sm font-medium ${config.sub}`}>
+      <div className="flex items-start justify-between mb-1.5 sm:mb-3">
+        <span className={`text-[10px] sm:text-xs lg:text-sm font-medium ${config.sub} leading-tight`}>
           {title}
         </span>
-        <div className={`p-2 lg:p-2.5 rounded-xl ${config.icon}`}>
-          <Icon className="w-4 h-4 lg:w-5 lg:h-5" />
+        <div className={`p-1 sm:p-2 lg:p-2.5 rounded-lg sm:rounded-xl ${config.icon}`}>
+          <Icon className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5" />
         </div>
       </div>
-      <div className={`text-xl lg:text-2xl font-extrabold ${config.text} tracking-tight`}>{value}</div>
+      <div className={`text-base sm:text-xl lg:text-2xl font-extrabold ${config.text} tracking-tight`}>{value}</div>
       {trend && (
-        <div className={`flex items-center gap-1 mt-2 ${trendUp ? 'text-success' : 'text-destructive'}`}>
-          {trendUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-          <span className="text-[11px] font-semibold">{trend}</span>
+        <div className={`flex items-center gap-1 mt-1 sm:mt-2 ${trendUp ? 'text-success' : 'text-destructive'}`}>
+          {trendUp ? <TrendingUp className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> : <TrendingDown className="w-2.5 h-2.5 sm:w-3 sm:h-3" />}
+          <span className="text-[9px] sm:text-[11px] font-semibold">{trend}</span>
         </div>
       )}
     </motion.div>
   );
 }
+

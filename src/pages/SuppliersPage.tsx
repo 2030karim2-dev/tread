@@ -1,9 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus, Phone, MessageCircle, Building2, MapPin, Edit2, Trash2, MoreVertical } from 'lucide-react';
 import { PageHeader, StarRating, EmptyState, TextField, SearchBar, ExportButton, ConfirmDialog } from '@/components/shared';
 import { useAppStore } from '@/store/useAppStore';
-import { supplierSchema } from '@/lib/validations';
+import { supplierSchema, SupplierFormData } from '@/lib/validations';
 import { EMPTY_MESSAGES } from '@/constants';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -11,18 +13,44 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { toast } from '@/hooks/use-toast';
 import { Supplier } from '@/types';
 
-const emptyForm = { name: '', company_name: '', city: '', phone: '', wechat_or_whatsapp: '', product_category: '', notes: '' };
+const defaultValues: SupplierFormData = { 
+  name: '', company_name: '', city: '', phone: '', wechat_or_whatsapp: '', product_category: '', notes: '' 
+};
 
 export default function SuppliersPage() {
-  const { suppliers, addSupplier, updateSupplier, deleteSupplier } = useAppStore();
+  const suppliers = useAppStore(s => s.suppliers);
+  const addSupplier = useAppStore(s => s.addSupplier);
+  const updateSupplier = useAppStore(s => s.updateSupplier);
+  const deleteSupplier = useAppStore(s => s.deleteSupplier);
+
   const [open, setOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [form, setForm] = useState(emptyForm);
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [cityFilter, setCityFilter] = useState('all');
+
+  const { control, handleSubmit, reset, formState: { errors } } = useForm<SupplierFormData>({
+    resolver: zodResolver(supplierSchema),
+    defaultValues,
+  });
+
+  // Reset form when editing changes
+  useEffect(() => {
+    if (editingSupplier) {
+      reset({
+        name: editingSupplier.name,
+        company_name: editingSupplier.company_name,
+        city: editingSupplier.city,
+        phone: editingSupplier.phone,
+        wechat_or_whatsapp: editingSupplier.wechat_or_whatsapp,
+        product_category: editingSupplier.product_category,
+        notes: editingSupplier.notes,
+      });
+    } else {
+      reset(defaultValues);
+    }
+  }, [editingSupplier, reset]);
 
   const categories = useMemo(() => [...new Set(suppliers.map(s => s.product_category))], [suppliers]);
   const cities = useMemo(() => [...new Set(suppliers.map(s => s.city))], [suppliers]);
@@ -39,16 +67,7 @@ export default function SuppliersPage() {
     });
   }, [suppliers, search, categoryFilter, cityFilter]);
 
-  const handleAdd = () => {
-    const result = supplierSchema.safeParse(form);
-    if (!result.success) {
-      const fieldErrors: Record<string, string> = {};
-      result.error.issues.forEach(issue => { fieldErrors[issue.path[0] as string] = issue.message; });
-      setErrors(fieldErrors);
-      return;
-    }
-    const d = result.data;
-    
+  const onSubmit = (d: SupplierFormData) => {
     if (editingSupplier) {
       updateSupplier(editingSupplier.id, { 
         name: d.name, company_name: d.company_name, city: d.city, phone: d.phone, 
@@ -64,23 +83,12 @@ export default function SuppliersPage() {
       toast({ title: 'تمت الإضافة', description: 'تم إضافة المورد بنجاح' });
     }
     
-    setForm(emptyForm);
-    setErrors({});
     setEditingSupplier(null);
     setOpen(false);
   };
 
   const handleEdit = (supplier: Supplier) => {
     setEditingSupplier(supplier);
-    setForm({
-      name: supplier.name,
-      company_name: supplier.company_name,
-      city: supplier.city,
-      phone: supplier.phone,
-      wechat_or_whatsapp: supplier.wechat_or_whatsapp,
-      product_category: supplier.product_category,
-      notes: supplier.notes,
-    });
     setOpen(true);
   };
 
@@ -107,7 +115,7 @@ export default function SuppliersPage() {
     <div className="space-y-4">
       <PageHeader title="الموردين" subtitle={`${suppliers.length} مورد مسجل`}>
         <ExportButton data={suppliers} columns={exportColumns} filename="قائمة-الموردين" />
-        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setErrors({}); setEditingSupplier(null); setForm(emptyForm); } }}>
+        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { reset(defaultValues); setEditingSupplier(null); } }}>
           <DialogTrigger asChild>
             <Button className="gradient-secondary shadow-colored-secondary text-secondary-foreground gap-2 font-bold">
               <Plus className="w-4 h-4" /> مورد جديد
@@ -121,19 +129,33 @@ export default function SuppliersPage() {
             </DialogHeader>
             <div className="space-y-3 mt-2">
               <div className="grid grid-cols-2 gap-3">
-                <TextField label="اسم المورد" value={form.name} onChange={v => setForm({ ...form, name: v })} error={errors.name} />
-                <TextField label="اسم الشركة" value={form.company_name} onChange={v => setForm({ ...form, company_name: v })} error={errors.company_name} />
+                <Controller name="name" control={control} render={({ field }) => (
+                  <TextField label="اسم المورد" {...field} error={errors.name?.message} />
+                )} />
+                <Controller name="company_name" control={control} render={({ field }) => (
+                  <TextField label="اسم الشركة" {...field} error={errors.company_name?.message} />
+                )} />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <TextField label="المدينة" value={form.city} onChange={v => setForm({ ...form, city: v })} error={errors.city} />
-                <TextField label="التصنيف" value={form.product_category} onChange={v => setForm({ ...form, product_category: v })} error={errors.product_category} />
+                <Controller name="city" control={control} render={({ field }) => (
+                  <TextField label="المدينة" {...field} error={errors.city?.message} />
+                )} />
+                <Controller name="product_category" control={control} render={({ field }) => (
+                  <TextField label="التصنيف" {...field} error={errors.product_category?.message} />
+                )} />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <TextField label="الهاتف" value={form.phone} onChange={v => setForm({ ...form, phone: v })} error={errors.phone} />
-                <TextField label="WeChat / WhatsApp" value={form.wechat_or_whatsapp} onChange={v => setForm({ ...form, wechat_or_whatsapp: v })} />
+                <Controller name="phone" control={control} render={({ field }) => (
+                  <TextField label="الهاتف" {...field} error={errors.phone?.message} />
+                )} />
+                <Controller name="wechat_or_whatsapp" control={control} render={({ field }) => (
+                  <TextField label="WeChat / WhatsApp" {...field} error={errors.wechat_or_whatsapp?.message} />
+                )} />
               </div>
-              <TextField label="ملاحظات" value={form.notes} onChange={v => setForm({ ...form, notes: v })} />
-              <Button onClick={handleAdd} className="w-full gradient-secondary text-secondary-foreground font-bold">
+              <Controller name="notes" control={control} render={({ field }) => (
+                <TextField label="ملاحظات" {...field} error={errors.notes?.message} />
+              )} />
+              <Button onClick={handleSubmit(onSubmit)} className="w-full gradient-secondary text-secondary-foreground font-bold">
                 {editingSupplier ? 'تحديث المورد' : 'حفظ المورد'}
               </Button>
             </div>
@@ -167,34 +189,36 @@ export default function SuppliersPage() {
       {filteredSuppliers.length === 0 ? (
         <EmptyState message={search || categoryFilter !== 'all' || cityFilter !== 'all' ? 'لا توجد نتائج مطابقة للبحث' : EMPTY_MESSAGES.suppliers} />
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filteredSuppliers.map((sup, i) => (
             <motion.div
               key={sup.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="group bg-card rounded-2xl border border-border p-4 shadow-card glass-card-hover"
+              className="group bg-card rounded-xl border border-border p-2 sm:p-4 shadow-card glass-card-hover"
             >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center text-sm font-bold text-primary-foreground">
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex items-center gap-1.5 sm:gap-3">
+                  <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl gradient-primary flex items-center justify-center text-[10px] sm:text-sm font-bold text-primary-foreground shrink-0">
                     {sup.name.charAt(0)}
                   </div>
-                  <div>
-                    <h4 className="font-bold text-sm">{sup.name}</h4>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Building2 className="w-3 h-3" />
-                      {sup.company_name}
+                  <div className="min-w-0">
+                    <h4 className="font-bold text-[11px] sm:text-sm truncate">{sup.name}</h4>
+                    <p className="text-[9px] sm:text-xs text-muted-foreground flex items-center gap-1 truncate">
+                      <Building2 className="w-2.5 h-2.5 shrink-0" />
+                      <span className="truncate">{sup.company_name}</span>
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <StarRating rating={sup.rating} onRate={(r) => updateSupplier(sup.id, { rating: r })} />
+                <div className="flex items-center gap-0.5">
+                  <div className="hidden sm:block">
+                    <StarRating rating={sup.rating} onRate={(r) => updateSupplier(sup.id, { rating: r })} />
+                  </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button className="p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-muted transition-all">
-                        <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                        <MoreVertical className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
@@ -214,27 +238,21 @@ export default function SuppliersPage() {
                 </div>
               </div>
               
-              <div className="flex flex-wrap gap-1.5 mb-3">
-                <span className="inline-flex items-center gap-1 bg-secondary/10 text-secondary rounded-lg px-2 py-0.5 text-[11px] font-semibold">
+              <div className="flex flex-wrap gap-1 mb-2">
+                <span className="inline-flex items-center bg-secondary/10 text-secondary rounded-md px-1.5 py-0.5 text-[9px] font-semibold max-w-full truncate">
                   {sup.product_category}
                 </span>
-                <span className="inline-flex items-center gap-1 bg-muted text-muted-foreground rounded-lg px-2 py-0.5 text-[11px]">
-                  <MapPin className="w-3 h-3" />
-                  {sup.city}
+                <span className="inline-flex items-center gap-1 bg-muted text-muted-foreground rounded-md px-1.5 py-0.5 text-[9px] max-w-full truncate">
+                  <MapPin className="w-2.5 h-2.5 shrink-0" />
+                  <span className="truncate">{sup.city}</span>
                 </span>
               </div>
 
-              <div className="space-y-1.5 text-xs text-muted-foreground">
-                <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
-                  <Phone className="w-3.5 h-3.5 text-primary" />
-                  <span className="font-mono text-foreground">{sup.phone}</span>
+              <div className="space-y-1 text-[10px] text-muted-foreground">
+                <div className="flex items-center gap-1.5 p-1.5 rounded-lg bg-muted/50">
+                  <Phone className="w-3 h-3 text-primary shrink-0" />
+                  <span className="font-mono text-foreground truncate">{sup.phone}</span>
                 </div>
-                {sup.wechat_or_whatsapp && (
-                  <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
-                    <MessageCircle className="w-3.5 h-3.5 text-accent" />
-                    <span className="font-mono text-foreground">{sup.wechat_or_whatsapp}</span>
-                  </div>
-                )}
               </div>
             </motion.div>
           ))}

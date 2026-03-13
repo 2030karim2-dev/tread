@@ -147,23 +147,25 @@ export default function TripsPage() {
       {filteredTrips.length === 0 ? (
         <EmptyState message={search || statusFilter !== 'all' ? 'لا توجد نتائج مطابقة للبحث' : EMPTY_MESSAGES.trips} />
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filteredTrips.map((trip, i) => (
             <motion.div
               key={trip.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="group bg-card rounded-2xl border border-border p-4 shadow-card glass-card-hover"
+              className="group bg-card rounded-xl border border-border p-2 sm:p-4 shadow-card glass-card-hover"
             >
-              <div className="flex items-start justify-between mb-3">
-                <h4 className="font-bold text-sm">{trip.name}</h4>
-                <div className="flex items-center gap-1">
-                  <StatusBadge status={trip.status} />
+              <div className="flex items-start justify-between mb-2">
+                <h4 className="font-bold text-[11px] sm:text-sm truncate">{trip.name}</h4>
+                <div className="flex items-center gap-0.5">
+                  <div className="scale-75 origin-top-right transform -translate-y-1">
+                    <StatusBadge status={trip.status} />
+                  </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button className="p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-muted transition-all">
-                        <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                        <MoreVertical className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
@@ -182,22 +184,22 @@ export default function TripsPage() {
                   </DropdownMenu>
                 </div>
               </div>
-              <div className="space-y-2 text-xs text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <MapPin className="w-3.5 h-3.5 text-primary" />
+              <div className="space-y-1.5 text-[10px] sm:text-xs text-muted-foreground">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary" />
                   </div>
-                  <span className="font-medium">{trip.city}، {trip.country}</span>
+                  <span className="font-medium truncate">{trip.city}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-secondary/10 flex items-center justify-center">
-                    <Calendar className="w-3.5 h-3.5 text-secondary" />
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-secondary/10 flex items-center justify-center shrink-0">
+                    <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-secondary" />
                   </div>
-                  <span>{trip.start_date} → {trip.end_date}</span>
+                  <span className="truncate">{trip.start_date.split('-').slice(1).join('/')} → {trip.end_date.split('-').slice(1).join('/')}</span>
                 </div>
               </div>
               {trip.notes && (
-                <p className="text-xs text-muted-foreground mt-3 pt-3 border-t border-border/50 line-clamp-2">{trip.notes}</p>
+                <p className="text-[9px] sm:text-xs text-muted-foreground mt-2 pt-2 border-t border-border/50 line-clamp-1">{trip.notes}</p>
               )}
             </motion.div>
           ))}

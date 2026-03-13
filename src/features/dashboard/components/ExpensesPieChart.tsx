@@ -26,24 +26,24 @@ export function ExpensesPieChart({ data }: ExpensesPieChartProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-card rounded-2xl border border-border p-5 shadow-card"
+            className="bg-card rounded-xl sm:rounded-2xl border border-border p-3 sm:p-5 shadow-card"
         >
-            <h3 className="font-bold text-sm flex items-center gap-2 mb-4">
-                <DollarSign className="w-4 h-4 text-secondary" />
+            <h3 className="font-bold text-[10px] sm:text-sm flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-4">
+                <DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-secondary" />
                 توزيع المصاريف
             </h3>
-            <div className="h-64">
+            <div className="h-40 sm:h-64">
                 <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                         <Pie
                             data={data}
                             cx="50%"
                             cy="50%"
-                            innerRadius={50}
-                            outerRadius={90}
-                            paddingAngle={3}
+                            innerRadius={30}
+                            outerRadius={60}
+                            paddingAngle={2}
                             dataKey="value"
-                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                            label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
                             labelLine={false}
                         >
                             {data.map((_, idx) => (

@@ -22,37 +22,32 @@ export function ShipmentTracking({ shipments }: ShipmentTrackingProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.45 }}
-            className="bg-card rounded-2xl border border-border p-5 shadow-card"
+            className="bg-card rounded-xl sm:rounded-2xl border border-border p-3 sm:p-5 shadow-card h-full"
         >
-            <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-sm flex items-center gap-2">
-                    <Ship className="w-4 h-4 text-info" />
-                    تتبع الشحنات
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <h3 className="font-bold text-[10px] sm:text-sm flex items-center gap-1.5 sm:gap-2">
+                    <Ship className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-info" />
+                    الشحنات
                 </h3>
-                <span className="text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                    {shipments.length} شحنة
-                </span>
             </div>
-            <div className="space-y-2.5">
+            <div className="space-y-1.5 sm:space-y-2.5">
                 {shipments.map(shipment => (
-                    <div key={shipment.id} className="p-3 rounded-xl bg-muted/40">
-                        <div className="flex items-center justify-between mb-2">
-                            <p className="font-semibold text-sm">{shipment.shipment_number}</p>
+                    <div key={shipment.id} className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-muted/40">
+                        <div className="flex items-center justify-between mb-1.5">
+                            <p className="font-bold text-[11px] sm:text-sm truncate mr-1">{shipment.shipment_number}</p>
                             <StatusBadge status={shipment.status} />
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <span className="font-medium">{shipment.departure_port}</span>
+                        <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-muted-foreground">
+                            <span className="truncate">{shipment.departure_port}</span>
                             <div className="flex-1 h-px bg-border relative">
-                                <Ship className="w-3 h-3 text-primary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-card rounded" />
+                                <Ship className="w-2.5 h-2.5 text-primary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-card rounded" />
                             </div>
-                            <span className="font-medium">{shipment.arrival_port}</span>
+                            <span className="truncate">{shipment.arrival_port}</span>
                         </div>
-                        <p className="text-[11px] text-muted-foreground mt-1.5">
-                            {shipment.shipping_company} • {shipment.cartons_count} كرتون
-                        </p>
                     </div>
                 ))}
             </div>
         </motion.div>
     );
 }
+
