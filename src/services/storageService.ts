@@ -1,9 +1,10 @@
 /**
  * Storage Service - خدمة التخزين
- * للتعامل مع localStorage و sessionStorage
+ * يستخدم IndexedDB عبر idb-keyval لتجنب تجميد الواجهة مع البيانات الكبيرة
  */
 
 import { generateId } from '@/lib/id';
+import { get, set as idbSet, del } from 'idb-keyval';
 
 export interface StorageOptions {
     prefix?: string;
@@ -33,25 +34,36 @@ export const decrypt = (data: string): string => {
 };
 
 /**
- * مخزن مخصص لـ Zustand
+ * مخزن مخصص لـ Zustand يعتمد على IndexedDB (غير متزامن، لا يجمّد الواجهة)
+ * يقوم بالهجرة التلقائية من localStorage عند أول تشغيل
  */
 export const zustandStorage = {
-    getItem: (name: string): string | null => {
-        const str = localStorage.getItem(name);
-        if (!str) return null;
-        try {
-            // Check if it's already valid JSON (unencrypted legacy data)
-            if (str.startsWith('{"') || str.startsWith('[')) return str;
-            return decrypt(str);
-        } catch {
-            return str;
+    getItem: async (name: string): Promise<string | null> => {
+        // حاول الحصول من IndexedDB أولاً
+        const idbVal = await get<string>(name);
+        if (idbVal !== undefined) return idbVal;
+
+        // هجرة من localStorage إن وُجد
+        const legacyStr = localStorage.getItem(name);
+        if (legacyStr) {
+            let val = legacyStr;
+            try {
+                if (!legacyStr.startsWith('{"') && !legacyStr.startsWith('[')) {
+                    val = decrypt(legacyStr);
+                }
+            } catch { /* ignore */ }
+            // انقل البيانات إلى IndexedDB وامسح localStorage
+            await idbSet(name, val);
+            localStorage.removeItem(name);
+            return val;
         }
+        return null;
     },
-    setItem: (name: string, value: string): void => {
-        localStorage.setItem(name, encrypt(value));
+    setItem: async (name: string, value: string): Promise<void> => {
+        await idbSet(name, value);
     },
-    removeItem: (name: string): void => {
-        localStorage.removeItem(name);
+    removeItem: async (name: string): Promise<void> => {
+        await del(name);
     },
 };
 

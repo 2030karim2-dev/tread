@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { exportToCSV } from '@/lib/export';
 import { toast } from '@/hooks/use-toast';
 
-interface ExportButtonProps<T extends Record<string, unknown>> {
+interface ExportButtonProps<T extends object> {
   data: T[];
   columns: { key: string; header: string }[];
   filename: string;
@@ -11,7 +11,7 @@ interface ExportButtonProps<T extends Record<string, unknown>> {
   size?: 'default' | 'sm' | 'icon';
 }
 
-export function ExportButton<T extends Record<string, unknown>>({
+export function ExportButton<T extends object>({
   data,
   columns,
   filename,

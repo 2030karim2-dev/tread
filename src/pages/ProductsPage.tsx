@@ -4,7 +4,6 @@ import { PageHeader, EditableTable, StarRating, EmptyState, SearchBar, ExportBut
 import type { ColumnDef } from '@/components/shared';
 import { useAppStore } from '@/store/useAppStore';
 import { Product } from '@/types';
-import { EMPTY_MESSAGES } from '@/constants';
 import { Button } from '@/components/ui/button';
 
 const emptyProduct: Omit<Product, 'id'> = {
@@ -13,7 +12,11 @@ const emptyProduct: Omit<Product, 'id'> = {
 };
 
 export default function ProductsPage() {
-  const { products, addProduct, updateProductField, deleteProduct } = useAppStore();
+  const products = useAppStore(s => s.products);
+  const addProduct = useAppStore(s => s.addProduct);
+  const updateProductField = useAppStore(s => s.updateProductField);
+  const deleteProduct = useAppStore(s => s.deleteProduct);
+
   const [search, setSearch] = useState('');
   const [brandFilter, setBrandFilter] = useState('all');
 

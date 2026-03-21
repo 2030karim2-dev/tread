@@ -1,4 +1,4 @@
-import { ReactNode, useCallback } from 'react';
+import { ReactNode, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Trash2 } from 'lucide-react';
 
@@ -31,30 +31,40 @@ export function EditableTable<T extends { id: string }>({
   footer,
 }: EditableTableProps<T>) {
 
+  // مصفوفة المراجع — كل خلية قابلة للتعديل تُخزَّن بالترقيم [rowIdx][colIdx]
+  const inputRefs = useRef<(HTMLInputElement | null)[][]>([]);
+
+  const editableCols = columns.filter(c => c.editable !== false && !c.render);
+  const totalCols = editableCols.length;
+
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>, rowIdx: number, colIdx: number) => {
-    const inputs = document.querySelectorAll<HTMLInputElement>('.editable-table-input');
-    const totalCols = columns.filter(c => c.editable !== false && !c.render).length;
-    let targetIdx = -1;
+    let targetRow = rowIdx;
+    let targetCol = colIdx;
 
     if (e.key === 'ArrowDown' || (e.key === 'Enter' && !e.shiftKey)) {
       e.preventDefault();
-      targetIdx = ((rowIdx + 1) * totalCols) + colIdx;
+      targetRow = rowIdx + 1;
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      targetIdx = ((rowIdx - 1) * totalCols) + colIdx;
-    } else if (e.key === 'Tab' && !e.shiftKey) {
-      return;
-    } else if (e.key === 'Tab' && e.shiftKey) {
+      targetRow = rowIdx - 1;
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      targetCol = colIdx - 1;
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      targetCol = colIdx + 1;
+    } else {
       return;
     }
 
-    if (targetIdx >= 0 && targetIdx < inputs.length) {
-      inputs[targetIdx]?.focus();
-      inputs[targetIdx]?.select();
-    }
-  }, [columns]);
+    if (targetRow < 0 || targetRow >= data.length) return;
+    if (targetCol < 0 || targetCol >= totalCols) return;
 
-  let inputIndex = 0;
+    const target = inputRefs.current[targetRow]?.[targetCol];
+    target?.focus();
+    target?.select();
+  }, [data.length, totalCols]);
+
 
   return (
     <motion.div
@@ -76,6 +86,8 @@ export function EditableTable<T extends { id: string }>({
         </thead>
         <tbody>
           {data.map((row, rowIdx) => {
+            // تهيئة مصفوفة refs للصف
+            if (!inputRefs.current[rowIdx]) inputRefs.current[rowIdx] = [];
             let editableColIdx = 0;
             return (
               <tr key={row.id} className="group hover:bg-muted/30 transition-colors">
@@ -105,9 +117,10 @@ export function EditableTable<T extends { id: string }>({
                   return (
                     <td key={col.key} className="spreadsheet-cell">
                       <input
-                        className={`editable-table-input w-full bg-transparent focus:outline-none text-sm ${col.align === 'center' ? 'text-center' : ''} ${col.mono ? 'font-mono' : ''}`}
+                        ref={el => { if (inputRefs.current[rowIdx]) inputRefs.current[rowIdx]![currentColIdx] = el; }}
+                        className={`w-full bg-transparent focus:outline-none text-sm ${col.align === 'center' ? 'text-center' : ''} ${col.mono ? 'font-mono' : ''}`}
                         type={col.type === 'number' ? 'number' : 'text'}
-                        value={col.type === 'number' ? (value as number || '') : String(value ?? '')}
+                        value={col.type === 'number' ? ((value as number) || '') : String(value ?? '')}
                         onChange={e => {
                           const newValue = col.type === 'number' ? Number(e.target.value) : e.target.value;
                           onCellChange?.(row.id, col.key, newValue);

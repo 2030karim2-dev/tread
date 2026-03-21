@@ -2,11 +2,10 @@ import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus, Phone, MessageCircle, Building2, MapPin, Edit2, Trash2, MoreVertical, LayoutGrid, Map } from 'lucide-react';
+import { Plus, Phone, Building2, MapPin, Edit2, Trash2, MoreVertical, LayoutGrid, Map } from 'lucide-react';
 import { PageHeader, StarRating, EmptyState, TextField, SearchBar, ExportButton, ConfirmDialog, SupplierMapPlaceholder } from '@/components/shared';
 import { useAppStore } from '@/store/useAppStore';
 import { supplierSchema, SupplierFormData } from '@/lib/validation';
-import { EMPTY_MESSAGES } from '@/constants';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -22,6 +21,7 @@ export default function SuppliersPage() {
   const addSupplier = useAppStore(s => s.addSupplier);
   const updateSupplier = useAppStore(s => s.updateSupplier);
   const deleteSupplier = useAppStore(s => s.deleteSupplier);
+
 
   const [open, setOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);

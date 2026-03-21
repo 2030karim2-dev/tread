@@ -4,7 +4,7 @@ import { Plus, MapPin, Calendar, Edit2, Trash2, MoreVertical } from 'lucide-reac
 import { PageHeader, StatusBadge, EmptyState, TextField, SearchBar, ExportButton, ConfirmDialog } from '@/components/shared';
 import { useAppStore } from '@/store/useAppStore';
 import { tripSchema } from '@/lib/validation';
-import { EMPTY_MESSAGES, STATUS_LABELS } from '@/constants';
+import { STATUS_LABELS } from '@/constants';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -14,7 +14,11 @@ import { Trip } from '@/types';
 const emptyForm = { name: '', country: 'الصين', city: '', start_date: '', end_date: '', notes: '' };
 
 export default function TripsPage() {
-  const { trips, addTrip, updateTrip, deleteTrip } = useAppStore();
+  const trips = useAppStore(s => s.trips);
+  const addTrip = useAppStore(s => s.addTrip);
+  const updateTrip = useAppStore(s => s.updateTrip);
+  const deleteTrip = useAppStore(s => s.deleteTrip);
+
   const [open, setOpen] = useState(false);
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);

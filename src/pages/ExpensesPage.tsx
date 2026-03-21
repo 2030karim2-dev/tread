@@ -5,7 +5,7 @@ import { PageHeader, EmptyState, TextField, SelectField, SearchBar, ExportButton
 import { useAppStore } from '@/store/useAppStore';
 import { expenseSchema } from '@/lib/validation';
 import { Expense } from '@/types';
-import { EXPENSE_CATEGORIES, CURRENCIES, EMPTY_MESSAGES } from '@/constants';
+import { EXPENSE_CATEGORIES, CURRENCIES } from '@/constants';
 import { convertCurrency, getCurrencySymbol } from '@/lib/currency';
 import { formatNumber } from '@/lib/helpers';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,11 @@ import { toast } from '@/hooks/use-toast';
 const emptyForm = { category: 'hotel', amount: '', currency: 'CNY', date: '', notes: '' };
 
 export default function ExpensesPage() {
-  const { expenses, addExpense, updateExpense, deleteExpense } = useAppStore();
+  const expenses = useAppStore(s => s.expenses);
+  const addExpense = useAppStore(s => s.addExpense);
+  const updateExpense = useAppStore(s => s.updateExpense);
+  const deleteExpense = useAppStore(s => s.deleteExpense);
+
   const [open, setOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
