@@ -1,23 +1,23 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+type Theme = 'light' | 'dark';
 
 interface ThemeState {
-  isDark: boolean;
-  toggle: () => void;
+  theme: Theme;
+  toggleTheme: () => void;
+  setTheme: (theme: Theme) => void;
 }
 
-export const useThemeStore = create<ThemeState>((set) => {
-  const stored = localStorage.getItem('theme');
-  const isDark = stored === 'dark';
-  if (isDark) document.documentElement.classList.add('dark');
-
-  return {
-    isDark,
-    toggle: () =>
-      set((state) => {
-        const next = !state.isDark;
-        document.documentElement.classList.toggle('dark', next);
-        localStorage.setItem('theme', next ? 'dark' : 'light');
-        return { isDark: next };
-      }),
-  };
-});
+export const useThemeStore = create<ThemeState>()(
+  persist(
+    (set) => ({
+      theme: 'light',
+      toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
+      setTheme: (theme) => set({ theme }),
+    }),
+    {
+      name: 'trade-navigator-theme',
+    }
+  )
+);

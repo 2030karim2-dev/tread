@@ -29,6 +29,8 @@ const PhrasesPage = lazy(() => import("./pages/PhrasesPage"));
 const NotesPage = lazy(() => import("./pages/NotesPage"));
 const CustomersPage = lazy(() => import("./pages/CustomersPage"));
 
+import { ThemeSync } from "@/components/layout/ThemeSync";
+
 const queryClient = new QueryClient();
 
 function PageLoader() {
@@ -48,6 +50,7 @@ function MarketModeSync() {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    <ThemeSync />
     <MarketModeSync />
     <TooltipProvider>
       <Sonner />

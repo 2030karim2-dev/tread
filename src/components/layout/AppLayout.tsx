@@ -4,11 +4,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Plane, Users, Package, FileText, Ship,
   Warehouse, ShoppingCart, Receipt, DollarSign, Menu, X,
-  Settings, RefreshCw, Search, Home, ChevronLeft
+  Settings, RefreshCw, Search, Home, ChevronLeft, Sun, Moon
 } from 'lucide-react';
 import logoImg from '@/assets/logo.png';
 import { NotificationBell } from '@/components/shared/NotificationBell';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { useThemeStore } from '@/store/useThemeStore';
 
 const navGroups = [
   {
@@ -268,6 +269,30 @@ function QuickSearch() {
   );
 }
 
+function ThemeToggle() {
+  const { theme, toggleTheme } = useThemeStore();
+  
+  return (
+    <button
+      onClick={toggleTheme}
+      className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-all duration-300"
+      title={theme === 'light' ? 'التبديل للوضع الداكن' : 'التبديل للوضع الفاتح'}
+    >
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={theme}
+          initial={{ y: 5, opacity: 0, rotate: -45 }}
+          animate={{ y: 0, opacity: 1, rotate: 0 }}
+          exit={{ y: -5, opacity: 0, rotate: 45 }}
+          transition={{ duration: 0.2 }}
+        >
+          {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+        </motion.div>
+      </AnimatePresence>
+    </button>
+  );
+}
+
 export default function AppLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -437,6 +462,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
             {/* Search */}
             <QuickSearch />
+
+            {/* Theme Toggle */}
+            <ThemeToggle />
 
             {/* Notifications */}
             <NotificationBell />

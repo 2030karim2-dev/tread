@@ -98,10 +98,39 @@ export default function Dashboard() {
 
       {/* Financial Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
-        <StatCard title="إجمالي المشتريات" value={`$${formatNumber(totalPurchases)}`} icon={ShoppingCart} variant="primary" delay={0.05} />
-        <StatCard title="إجمالي المبيعات" value={`$${formatNumber(totalSales)}`} icon={DollarSign} variant="secondary" delay={0.1} />
-        <StatCard title="صافي الربح" value={`$${formatNumber(totalProfit)}`} icon={TrendingUp} variant="accent" trend={`المصروفات: $${formatNumber(totalExpenses)}`} trendUp={false} delay={0.15} />
-        <StatCard title="قيمة المخزون" value={`$${formatNumber(inventoryValue)}`} icon={Warehouse} delay={0.2} />
+        <StatCard 
+          title="إجمالي المشتريات" 
+          value={`$${formatNumber(totalPurchases)}`} 
+          icon={ShoppingCart} 
+          variant="primary" 
+          delay={0.05} 
+          sparklineData={[30, 45, 35, 50, 40, 60, 55]}
+        />
+        <StatCard 
+          title="إجمالي المبيعات" 
+          value={`$${formatNumber(totalSales)}`} 
+          icon={DollarSign} 
+          variant="secondary" 
+          delay={0.1} 
+          sparklineData={[20, 30, 25, 45, 35, 50, 70]}
+        />
+        <StatCard 
+          title="صافي الربح" 
+          value={`$${formatNumber(totalProfit)}`} 
+          icon={TrendingUp} 
+          variant="accent" 
+          trend={`المصروفات: $${formatNumber(totalExpenses)}`} 
+          trendUp={totalProfit > 0} 
+          delay={0.15} 
+          sparklineData={[10, 20, 15, 25, 20, 35, 40]}
+        />
+        <StatCard 
+          title="قيمة المخزون" 
+          value={`$${formatNumber(inventoryValue)}`} 
+          icon={Warehouse} 
+          delay={0.2} 
+          sparklineData={[50, 48, 52, 51, 55, 53, 58]}
+        />
       </div>
 
       {/* Charts Section */}

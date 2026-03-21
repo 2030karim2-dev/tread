@@ -1,39 +1,39 @@
-export interface Trip {
-  id: string;
-  name: string;
-  country: string;
-  city: string;
-  start_date: string;
-  end_date: string;
-  notes: string;
-  status: 'planning' | 'active' | 'completed';
-}
+/**
+ * types/index.ts
+ * ❗ جميع الأنواع هنا مستنتجة من Zod Schemas في lib/validation.ts
+ * هذا يضمن أن النوع والتحقق يكونان دائماً متزامنَيْن.
+ */
 
-export interface Supplier {
-  id: string;
-  name: string;
-  company_name: string;
-  city: string;
-  phone: string;
-  wechat_or_whatsapp: string;
-  product_category: string;
-  rating: number;
-  notes: string;
-  trip_id: string;
-}
+import { z } from 'zod';
+import {
+  tripSchema,
+  supplierSchema,
+  expenseSchema,
+  productSchema,
+  shipmentSchema,
+  customerSchema,
+} from '@/lib/validation';
 
-export interface Product {
+// ===== Core Domain Types (Zod-derived) =====
+export type Trip        = z.infer<typeof tripSchema> & { id: string };
+export type Supplier    = z.infer<typeof supplierSchema> & { id: string };
+export type Expense     = z.infer<typeof expenseSchema> & { id: string };
+export type Customer    = z.infer<typeof customerSchema> & { id: string };
+export type Shipment    = z.infer<typeof shipmentSchema> & { id: string };
+
+// Product has image_url which is optional url — derive then add id
+export type Product = z.infer<typeof productSchema> & { id: string };
+
+// ===== Quotation (no full Zod schema yet — inline type) =====
+export interface QuotationItem {
   id: string;
-  name: string;
+  product_name: string;
   oem_number: string;
   brand: string;
-  size: string;
-  purchase_price: number;
-  sale_price: number;
   quantity: number;
+  purchase_price: number;
+  size: string;
   notes: string;
-  rating: number;
-  image_url?: string;
 }
 
 export interface Quotation {
@@ -45,13 +45,15 @@ export interface Quotation {
   items: QuotationItem[];
 }
 
-export interface QuotationItem {
+// ===== Invoice Types (not yet in Zod) =====
+export interface PurchaseInvoiceItem {
   id: string;
   product_name: string;
   oem_number: string;
   brand: string;
   quantity: number;
   purchase_price: number;
+  sale_price: number;
   size: string;
   notes: string;
 }
@@ -66,31 +68,15 @@ export interface PurchaseInvoice {
   items: PurchaseInvoiceItem[];
 }
 
-export interface PurchaseInvoiceItem {
+export interface SalesInvoiceItem {
   id: string;
   product_name: string;
   oem_number: string;
   brand: string;
   quantity: number;
-  purchase_price: number;
   sale_price: number;
   size: string;
   notes: string;
-}
-
-export interface Shipment {
-  id: string;
-  shipment_number: string;
-  shipping_company: string;
-  shipping_type: 'air' | 'sea';
-  departure_port: string;
-  arrival_port: string;
-  ship_date: string;
-  expected_arrival_date: string;
-  shipping_cost: number;
-  weight: number;
-  cartons_count: number;
-  status: 'purchased' | 'at_warehouse' | 'shipped' | 'in_transit' | 'arrived' | 'delivered';
 }
 
 export interface SalesInvoice {
@@ -104,36 +90,7 @@ export interface SalesInvoice {
   items: SalesInvoiceItem[];
 }
 
-export interface SalesInvoiceItem {
-  id: string;
-  product_name: string;
-  oem_number: string;
-  brand: string;
-  quantity: number;
-  sale_price: number;
-  size: string;
-  notes: string;
-}
-
-export interface Customer {
-  id: string;
-  name: string;
-  company_name: string;
-  city: string;
-  phone: string;
-  notes: string;
-}
-
-export interface Expense {
-  id: string;
-  trip_id: string;
-  category: 'hotel' | 'transport' | 'food' | 'samples' | 'translator' | 'other';
-  amount: number;
-  currency: string;
-  date: string;
-  notes: string;
-}
-
+// ===== Inventory =====
 export interface InventoryItem {
   id: string;
   product_name: string;
@@ -146,12 +103,7 @@ export interface InventoryItem {
   sale_price: number;
 }
 
-export interface CurrencyRate {
-  from: string;
-  to: string;
-  rate: number;
-}
-
+// ===== Settings =====
 export interface CompanySettings {
   name: string;
   owner: string;
@@ -169,4 +121,11 @@ export interface CurrencyRates {
   USD_SAR: number;
   SAR_CNY: number;
   SAR_USD: number;
+}
+
+// Legacy (kept for compatibility)
+export interface CurrencyRate {
+  from: string;
+  to: string;
+  rate: number;
 }
