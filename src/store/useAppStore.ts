@@ -1,9 +1,15 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { zustandStorage } from '@/services/storageService';
-import { Trip, Supplier, Product, Shipment, Expense, InventoryItem, Customer, Quotation, CompanySettings, CurrencyRates } from '@/types';
-import { mockTrips, mockSuppliers, mockProducts, mockShipments, mockExpenses, mockInventory } from '@/data/mock-data';
+import { Customer, Shipment, InventoryItem, Quotation, CompanySettings, CurrencyRates } from '@/types';
+import { mockShipments, mockInventory } from '@/data/mock-data';
 import { generateId } from '@/lib/helpers';
+
+// Import Slices
+import { createTripsSlice, type TripsSlice } from './slices/tripsSlice';
+import { createSuppliersSlice, type SuppliersSlice } from './slices/suppliersSlice';
+import { createProductsSlice, type ProductsSlice } from './slices/productsSlice';
+import { createExpensesSlice, type ExpensesSlice } from './slices/expensesSlice';
 
 // ===== Purchase Invoice (local to store) =====
 export interface StorePurchaseInvoiceItem {
@@ -48,7 +54,7 @@ export interface StoreSalesInvoice {
   items: StoreSalesInvoiceItem[];
 }
 
-// ===== Default mock data for invoices =====
+// ===== Default data =====
 const defaultPurchaseInvoices: StorePurchaseInvoice[] = [
   {
     id: '1', number: 'INV-2025-001', supplier_id: '1', supplier_name: 'Guangzhou Auto Parts Co.',
@@ -92,15 +98,6 @@ const defaultQuotations: Quotation[] = [
     items: [
       { id: '1', product_name: 'فلتر زيت تويوتا', oem_number: '04152-YZZA1', brand: 'Toyota', quantity: 500, purchase_price: 8, size: 'قياسي', notes: '' },
       { id: '2', product_name: 'فلتر هواء كامري', oem_number: '17801-0H050', brand: 'Toyota', quantity: 300, purchase_price: 12, size: 'كبير', notes: '' },
-      { id: '3', product_name: 'تيل فرامل أمامي', oem_number: '04465-33471', brand: 'Toyota', quantity: 200, purchase_price: 18, size: 'أمامي', notes: '' },
-    ],
-  },
-  {
-    id: '2', supplier_id: '3', trip_id: '1', date: '2025-01-14', notes: '',
-    items: [
-      { id: '4', product_name: 'فلتر زيت تويوتا', oem_number: '04152-YZZA1', brand: 'Toyota', quantity: 500, purchase_price: 9.5, size: 'قياسي', notes: '' },
-      { id: '5', product_name: 'فلتر هواء كامري', oem_number: '17801-0H050', brand: 'Toyota', quantity: 300, purchase_price: 11, size: 'كبير', notes: '' },
-      { id: '6', product_name: 'تيل فرامل أمامي', oem_number: '04465-33471', brand: 'Toyota', quantity: 200, purchase_price: 19, size: 'أمامي', notes: '' },
     ],
   },
 ];
@@ -121,22 +118,14 @@ const defaultCompanySettings: CompanySettings = {
 };
 
 const defaultCurrencyRates: CurrencyRates = {
-  CNY_USD: 0.14,
-  CNY_SAR: 0.52,
-  USD_CNY: 7.15,
-  USD_SAR: 3.75,
-  SAR_CNY: 1.91,
-  SAR_USD: 0.27,
+  CNY_USD: 0.14, CNY_SAR: 0.52,
+  USD_CNY: 7.15, USD_SAR: 3.75,
+  SAR_CNY: 1.91, SAR_USD: 0.27,
 };
 
-// ===== App State Interface =====
-interface AppState {
-  // Data
-  trips: Trip[];
-  suppliers: Supplier[];
-  products: Product[];
+// ===== Remaining slices (non-extracted yet) =====
+interface CoreState {
   shipments: Shipment[];
-  expenses: Expense[];
   inventory: InventoryItem[];
   customers: Customer[];
   quotations: Quotation[];
@@ -145,70 +134,48 @@ interface AppState {
   companySettings: CompanySettings;
   currencyRates: CurrencyRates;
 
-  // Trip actions
-  addTrip: (trip: Omit<Trip, 'id'>) => void;
-  updateTrip: (id: string, data: Partial<Trip>) => void;
-  deleteTrip: (id: string) => void;
-
-  // Supplier actions
-  addSupplier: (supplier: Omit<Supplier, 'id'>) => void;
-  updateSupplier: (id: string, data: Partial<Supplier>) => void;
-  deleteSupplier: (id: string) => void;
-
-  // Product actions
-  addProduct: (product: Omit<Product, 'id'>) => void;
-  updateProductField: (id: string, field: string, value: string | number) => void;
-  deleteProduct: (id: string) => void;
-
-  // Expense actions
-  addExpense: (expense: Omit<Expense, 'id'>) => void;
-  updateExpense: (id: string, data: Partial<Expense>) => void;
-  deleteExpense: (id: string) => void;
-
-  // Shipment actions
   addShipment: (shipment: Omit<Shipment, 'id'>) => void;
   updateShipment: (id: string, data: Partial<Shipment>) => void;
   deleteShipment: (id: string) => void;
 
-  // Customer actions
   addCustomer: (customer: Omit<Customer, 'id'>) => void;
   updateCustomer: (id: string, data: Partial<Customer>) => void;
   deleteCustomer: (id: string) => void;
 
-  // Quotation actions
   addQuotation: (quotation: Omit<Quotation, 'id'>) => void;
   updateQuotation: (id: string, data: Partial<Quotation>) => void;
   deleteQuotation: (id: string) => void;
 
-  // Purchase Invoice actions
   addPurchaseInvoice: (invoice: Omit<StorePurchaseInvoice, 'id'>) => void;
   updatePurchaseInvoice: (id: string, data: Partial<StorePurchaseInvoice>) => void;
   deletePurchaseInvoice: (id: string) => void;
 
-  // Sales Invoice actions
   addSalesInvoice: (invoice: Omit<StoreSalesInvoice, 'id'>) => void;
   updateSalesInvoice: (id: string, data: Partial<StoreSalesInvoice>) => void;
   deleteSalesInvoice: (id: string) => void;
 
-  // Inventory actions
   addInventoryItem: (item: Omit<InventoryItem, 'id'>) => void;
   updateInventoryField: (id: string, field: string, value: string | number) => void;
   deleteInventoryItem: (id: string) => void;
 
-  // Settings actions
   updateCompanySettings: (settings: Partial<CompanySettings>) => void;
   updateCurrencyRates: (rates: Partial<CurrencyRates>) => void;
 }
 
+// ===== Combined AppState =====
+export type AppState = TripsSlice & SuppliersSlice & ProductsSlice & ExpensesSlice & CoreState;
+
 export const useAppStore = create<AppState>()(
   persist(
-    (set) => ({
-      // ===== Initial Data =====
-      trips: mockTrips,
-      suppliers: mockSuppliers,
-      products: mockProducts,
+    (...a) => ({
+      // Composed Slices
+      ...createTripsSlice(...a),
+      ...createSuppliersSlice(...a),
+      ...createProductsSlice(...a),
+      ...createExpensesSlice(...a),
+
+      // ===== Core State (not yet in slices) =====
       shipments: mockShipments,
-      expenses: mockExpenses,
       inventory: mockInventory,
       customers: defaultCustomers,
       quotations: defaultQuotations,
@@ -217,91 +184,52 @@ export const useAppStore = create<AppState>()(
       companySettings: defaultCompanySettings,
       currencyRates: defaultCurrencyRates,
 
-      // ===== Trip Actions =====
-      addTrip: (trip) =>
-        set((state) => ({ trips: [{ ...trip, id: generateId() }, ...state.trips] })),
-      updateTrip: (id, data) =>
-        set((state) => ({ trips: state.trips.map((t) => (t.id === id ? { ...t, ...data } : t)) })),
-      deleteTrip: (id) =>
-        set((state) => ({ trips: state.trips.filter((t) => t.id !== id) })),
-
-      // ===== Supplier Actions =====
-      addSupplier: (supplier) =>
-        set((state) => ({ suppliers: [{ ...supplier, id: generateId() }, ...state.suppliers] })),
-      updateSupplier: (id, data) =>
-        set((state) => ({ suppliers: state.suppliers.map((s) => (s.id === id ? { ...s, ...data } : s)) })),
-      deleteSupplier: (id) =>
-        set((state) => ({ suppliers: state.suppliers.filter((s) => s.id !== id) })),
-
-      // ===== Product Actions =====
-      addProduct: (product) =>
-        set((state) => ({ products: [...state.products, { ...product, id: generateId() }] })),
-      updateProductField: (id, field, value) =>
-        set((state) => ({ products: state.products.map((p) => (p.id === id ? { ...p, [field]: value } : p)) })),
-      deleteProduct: (id) =>
-        set((state) => ({ products: state.products.filter((p) => p.id !== id) })),
-
-      // ===== Expense Actions =====
-      addExpense: (expense) =>
-        set((state) => ({ expenses: [{ ...expense, id: generateId() }, ...state.expenses] })),
-      updateExpense: (id, data) =>
-        set((state) => ({ expenses: state.expenses.map((e) => (e.id === id ? { ...e, ...data } : e)) })),
-      deleteExpense: (id) =>
-        set((state) => ({ expenses: state.expenses.filter((e) => e.id !== id) })),
-
-      // ===== Shipment Actions =====
       addShipment: (shipment) =>
-        set((state) => ({ shipments: [{ ...shipment, id: generateId() }, ...state.shipments] })),
+        a[0]((state) => ({ shipments: [{ ...shipment, id: generateId() }, ...state.shipments] })),
       updateShipment: (id, data) =>
-        set((state) => ({ shipments: state.shipments.map((s) => (s.id === id ? { ...s, ...data } : s)) })),
+        a[0]((state) => ({ shipments: state.shipments.map((s) => (s.id === id ? { ...s, ...data } : s)) })),
       deleteShipment: (id) =>
-        set((state) => ({ shipments: state.shipments.filter((s) => s.id !== id) })),
+        a[0]((state) => ({ shipments: state.shipments.filter((s) => s.id !== id) })),
 
-      // ===== Customer Actions =====
       addCustomer: (customer) =>
-        set((state) => ({ customers: [{ ...customer, id: generateId() }, ...state.customers] })),
+        a[0]((state) => ({ customers: [{ ...customer, id: generateId() }, ...state.customers] })),
       updateCustomer: (id, data) =>
-        set((state) => ({ customers: state.customers.map((c) => (c.id === id ? { ...c, ...data } : c)) })),
+        a[0]((state) => ({ customers: state.customers.map((c) => (c.id === id ? { ...c, ...data } : c)) })),
       deleteCustomer: (id) =>
-        set((state) => ({ customers: state.customers.filter((c) => c.id !== id) })),
+        a[0]((state) => ({ customers: state.customers.filter((c) => c.id !== id) })),
 
-      // ===== Quotation Actions =====
       addQuotation: (quotation) =>
-        set((state) => ({ quotations: [{ ...quotation, id: generateId() }, ...state.quotations] })),
+        a[0]((state) => ({ quotations: [{ ...quotation, id: generateId() }, ...state.quotations] })),
       updateQuotation: (id, data) =>
-        set((state) => ({ quotations: state.quotations.map((q) => (q.id === id ? { ...q, ...data } : q)) })),
+        a[0]((state) => ({ quotations: state.quotations.map((q) => (q.id === id ? { ...q, ...data } : q)) })),
       deleteQuotation: (id) =>
-        set((state) => ({ quotations: state.quotations.filter((q) => q.id !== id) })),
+        a[0]((state) => ({ quotations: state.quotations.filter((q) => q.id !== id) })),
 
-      // ===== Purchase Invoice Actions =====
       addPurchaseInvoice: (invoice) =>
-        set((state) => ({ purchaseInvoices: [...state.purchaseInvoices, { ...invoice, id: generateId() }] })),
+        a[0]((state) => ({ purchaseInvoices: [...state.purchaseInvoices, { ...invoice, id: generateId() }] })),
       updatePurchaseInvoice: (id, data) =>
-        set((state) => ({ purchaseInvoices: state.purchaseInvoices.map((inv) => (inv.id === id ? { ...inv, ...data } : inv)) })),
+        a[0]((state) => ({ purchaseInvoices: state.purchaseInvoices.map((inv) => (inv.id === id ? { ...inv, ...data } : inv)) })),
       deletePurchaseInvoice: (id) =>
-        set((state) => ({ purchaseInvoices: state.purchaseInvoices.filter((inv) => inv.id !== id) })),
+        a[0]((state) => ({ purchaseInvoices: state.purchaseInvoices.filter((inv) => inv.id !== id) })),
 
-      // ===== Sales Invoice Actions =====
       addSalesInvoice: (invoice) =>
-        set((state) => ({ salesInvoices: [...state.salesInvoices, { ...invoice, id: generateId() }] })),
+        a[0]((state) => ({ salesInvoices: [...state.salesInvoices, { ...invoice, id: generateId() }] })),
       updateSalesInvoice: (id, data) =>
-        set((state) => ({ salesInvoices: state.salesInvoices.map((inv) => (inv.id === id ? { ...inv, ...data } : inv)) })),
+        a[0]((state) => ({ salesInvoices: state.salesInvoices.map((inv) => (inv.id === id ? { ...inv, ...data } : inv)) })),
       deleteSalesInvoice: (id) =>
-        set((state) => ({ salesInvoices: state.salesInvoices.filter((inv) => inv.id !== id) })),
+        a[0]((state) => ({ salesInvoices: state.salesInvoices.filter((inv) => inv.id !== id) })),
 
-      // ===== Inventory Actions =====
       addInventoryItem: (item) =>
-        set((state) => ({ inventory: [...state.inventory, { ...item, id: generateId() }] })),
+        a[0]((state) => ({ inventory: [...state.inventory, { ...item, id: generateId() }] })),
       updateInventoryField: (id, field, value) =>
-        set((state) => ({ inventory: state.inventory.map((i) => (i.id === id ? { ...i, [field]: value } : i)) })),
+        a[0]((state) => ({ inventory: state.inventory.map((i) => (i.id === id ? { ...i, [field]: value } : i)) })),
       deleteInventoryItem: (id) =>
-        set((state) => ({ inventory: state.inventory.filter((i) => i.id !== id) })),
+        a[0]((state) => ({ inventory: state.inventory.filter((i) => i.id !== id) })),
 
-      // ===== Settings Actions =====
       updateCompanySettings: (settings) =>
-        set((state) => ({ companySettings: { ...state.companySettings, ...settings } })),
+        a[0]((state) => ({ companySettings: { ...state.companySettings, ...settings } })),
       updateCurrencyRates: (rates) =>
-        set((state) => ({ currencyRates: { ...state.currencyRates, ...rates } })),
+        a[0]((state) => ({ currencyRates: { ...state.currencyRates, ...rates } })),
     }),
     {
       name: 'trade-navigator-store',
