@@ -3,12 +3,15 @@ import { motion } from 'framer-motion';
 import { LucideIcon, PackageOpen } from 'lucide-react';
 
 interface EmptyStateProps {
-  message: string;
+  message: string | undefined;
   icon?: LucideIcon;
   action?: ReactNode;
 }
 
 export function EmptyState({ message, icon: Icon = PackageOpen, action }: EmptyStateProps) {
+  if (!message) {
+    return null;
+  }
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}

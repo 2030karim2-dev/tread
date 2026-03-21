@@ -283,22 +283,22 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       <motion.aside 
         initial={false}
         animate={{ 
-          width: isCollapsed ? 0 : 150,
-          opacity: isCollapsed ? 0 : 1,
-          x: isCollapsed ? 150 : 0
+          width: isCollapsed ? 64 : 150,
         }}
-        className="hidden lg:flex flex-col gradient-sidebar fixed inset-y-0 right-0 z-40 border-l border-sidebar-border/50 overflow-hidden shadow-2xl"
+        className="hidden lg:flex flex-col gradient-sidebar fixed inset-y-0 right-0 z-40 border-l border-sidebar-border/50 overflow-hidden shadow-2xl transition-all duration-300"
       >
         {/* Logo */}
         <div className="p-3 pb-2 flex flex-col items-center gap-1 text-center">
-          <div className="w-8 h-8 rounded-lg gradient-secondary shadow-colored-secondary flex items-center justify-center overflow-hidden">
+          <div className="w-8 h-8 rounded-lg gradient-secondary shadow-colored-secondary flex items-center justify-center overflow-hidden shrink-0">
             <img src={logoImg} alt="Logo" className="w-5 h-5 object-contain" />
           </div>
-          <div>
-            <h1 className="text-xs font-extrabold text-sidebar-foreground tracking-tight">
-              Auto<span className="text-secondary">Parts</span>
-            </h1>
-          </div>
+          {!isCollapsed && (
+            <div>
+              <h1 className="text-xs font-extrabold text-sidebar-foreground tracking-tight whitespace-nowrap">
+                Auto<span className="text-secondary">Parts</span>
+              </h1>
+            </div>
+          )}
         </div>
 
         <div className="mx-4 mb-3 h-px bg-sidebar-border/50" />
@@ -309,24 +309,30 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         </nav>
 
         {/* Keyboard shortcuts hint */}
-        <div className="mx-4 px-3 py-2 bg-sidebar-accent/50 rounded-lg mb-2">
-          <p className="text-[10px] text-sidebar-foreground/40 text-center">
-            اضغط <kbd className="bg-sidebar-accent px-1 rounded text-[10px] font-mono">Alt+/</kbd> لعرض الاختصارات
-          </p>
-        </div>
+        {!isCollapsed && (
+          <div className="mx-4 px-3 py-2 bg-sidebar-accent/50 rounded-lg mb-2">
+            <p className="text-[10px] text-sidebar-foreground/40 text-center whitespace-nowrap">
+              اضغط <kbd className="bg-sidebar-accent px-1 rounded text-[10px] font-mono">Alt+/</kbd> لعرض الاختصارات
+            </p>
+          </div>
+        )}
 
         {/* Bottom */}
         <div className="mx-4 h-px bg-sidebar-border/50" />
         <div className="p-3">
-          <div className="flex items-center gap-3 p-2.5 rounded-lg bg-sidebar-accent/50">
-            <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-xs font-bold text-primary-foreground">
+          <div className={`flex items-center justify-center gap-3 p-2.5 rounded-lg bg-sidebar-accent/50 ${isCollapsed ? 'px-0' : ''}`}>
+            <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-xs font-bold text-primary-foreground shrink-0">
               م
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-sidebar-foreground truncate">مدير النظام</p>
-              <p className="text-[10px] text-sidebar-foreground/40">الخطة المجانية</p>
-            </div>
-            <Settings className="w-4 h-4 text-sidebar-foreground/40" />
+            {!isCollapsed && (
+              <>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-sidebar-foreground truncate">مدير النظام</p>
+                  <p className="text-[10px] text-sidebar-foreground/40 truncate">الخطة المجانية</p>
+                </div>
+                <Settings className="w-4 h-4 text-sidebar-foreground/40 shrink-0" />
+              </>
+            )}
           </div>
         </div>
       </motion.aside>
@@ -335,7 +341,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       <button 
         onClick={() => setIsCollapsed(!isCollapsed)}
         className={`hidden lg:flex fixed top-4 z-50 p-2 rounded-full gradient-secondary text-secondary-foreground shadow-lg transition-all duration-300 ${
-          isCollapsed ? 'right-4 rotate-180' : 'right-[160px]'
+          isCollapsed ? 'right-[48px] -translate-x-1/2 rotate-180' : 'right-[150px] -translate-x-1/2'
         }`}
       >
         <motion.div animate={{ rotate: isCollapsed ? 180 : 0 }}>
@@ -387,7 +393,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       {/* Main Content — no margin on mobile, margin only on lg when sidebar visible */}
       <main 
         className={`flex-1 min-w-0 transition-[margin] duration-300 ${
-          isCollapsed ? '' : 'lg:mr-[150px]'
+          isCollapsed ? 'lg:mr-[64px]' : 'lg:mr-[150px]'
         }`}
       >
         {/* ===== Improved Top Bar ===== */}

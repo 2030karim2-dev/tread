@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useMemo } from 'react';
-import { Home, Plus, Search, Bell, Settings, PanelLeft, PanelLeftClose, Menu } from 'lucide-react';
+import { Home, Plus, Search, Bell, Settings, PanelLeftClose, Menu, ChevronLeft } from 'lucide-react';
 import { useMobileContext } from '@/contexts/MobileContext';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/store/useAppStore';
@@ -124,9 +124,7 @@ export function MobileHeader({ title, showBack, onBack, rightAction }: MobileHea
                             onClick={onBack || (() => navigate(-1))}
                             className="p-1 -ml-1 hover:bg-muted rounded-md"
                         >
-                            <svg className="w-5 h-5 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                            </svg>
+                            <ChevronLeft className="w-5 h-5 rtl:rotate-180" />
                         </button>
                     )}
                     <h1 className="text-base font-semibold truncate">{title}</h1>

@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode } from 'react';
+import { createContext, useContext, ReactNode, useMemo } from 'react';
 import { useIsMobile, useScreenSize, useOrientation } from '@/hooks/useScreenSize';
 
 interface MobileConfig {
@@ -139,7 +139,9 @@ export function MobileProvider({ children }: MobileProviderProps) {
     const orientation = useOrientation();
     const isTablet = screenSize === 'md';
 
-    const config = getMobileConfig(screenSize, isMobile, isTablet, orientation);
+    const config = useMemo(() => 
+        getMobileConfig(screenSize, isMobile, isTablet, orientation)
+    , [screenSize, isMobile, isTablet, orientation]);
 
     return (
         <MobileContext.Provider value={config}>

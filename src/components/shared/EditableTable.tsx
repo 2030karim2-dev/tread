@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Trash2 } from 'lucide-react';
 
@@ -31,7 +31,7 @@ export function EditableTable<T extends { id: string }>({
   footer,
 }: EditableTableProps<T>) {
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, rowIdx: number, colIdx: number) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>, rowIdx: number, colIdx: number) => {
     const inputs = document.querySelectorAll<HTMLInputElement>('.editable-table-input');
     const totalCols = columns.filter(c => c.editable !== false && !c.render).length;
     let targetIdx = -1;
@@ -43,7 +43,6 @@ export function EditableTable<T extends { id: string }>({
       e.preventDefault();
       targetIdx = ((rowIdx - 1) * totalCols) + colIdx;
     } else if (e.key === 'Tab' && !e.shiftKey) {
-      // Let default Tab handle it
       return;
     } else if (e.key === 'Tab' && e.shiftKey) {
       return;
@@ -53,7 +52,7 @@ export function EditableTable<T extends { id: string }>({
       inputs[targetIdx]?.focus();
       inputs[targetIdx]?.select();
     }
-  };
+  }, [columns]);
 
   let inputIndex = 0;
 
@@ -122,6 +121,7 @@ export function EditableTable<T extends { id: string }>({
                   <td className="spreadsheet-cell text-center">
                     <button
                       onClick={() => onDeleteRow(row.id)}
+                      aria-label="حذف الصف"
                       className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-destructive/10 text-destructive"
                     >
                       <Trash2 className="w-3.5 h-3.5" />

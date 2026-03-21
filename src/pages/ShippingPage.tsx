@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { PageHeader, StatusBadge, TextField, ConfirmDialog } from '@/components/shared';
 import { useAppStore } from '@/store/useAppStore';
 import { STATUS_LABELS, SHIPPING_TYPES } from '@/constants';
-import { shipmentSchema, ShipmentFormData } from '@/lib/validations';
+import { shipmentSchema, ShipmentFormData } from '@/lib/validation';
 import { Ship, MapPin, Package, DollarSign, Weight, Calendar, Anchor, Clock, Check, Plus, Edit2, Trash2, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';

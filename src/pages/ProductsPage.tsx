@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Plus } from 'lucide-react';
-import { PageHeader, EditableTable, StarRating, EmptyState, SearchBar, ExportButton } from '@/components/shared';
+import { PageHeader, EditableTable, StarRating, EmptyState, SearchBar, ExportButton, BarcodeScanner } from '@/components/shared';
 import type { ColumnDef } from '@/components/shared';
 import { useAppStore } from '@/store/useAppStore';
 import { Product } from '@/types';
@@ -70,6 +70,7 @@ export default function ProductsPage() {
         placeholder="ابحث عن منتج أو رقم OEM..."
         value={search}
         onChange={setSearch}
+        actionButton={<BarcodeScanner onResult={(res) => setSearch(res)} />}
         filters={[
           {
             key: 'brand',
@@ -82,7 +83,7 @@ export default function ProductsPage() {
       />
 
       {filteredProducts.length === 0 ? (
-        <EmptyState message={search || brandFilter !== 'all' ? 'لا توجد نتائج مطابقة' : EMPTY_MESSAGES.products} />
+        <EmptyState message={search || brandFilter !== 'all' ? 'لا توجد نتائج مطابقة' : 'لا توجد منتجات بعد. أضف أول منتج!'} />
       ) : (
         <EditableTable
           data={filteredProducts}

@@ -86,42 +86,7 @@ export function useLocalStorage<T>(
     return [storedValue, setValue];
 }
 
-/**
- * Hook للتحقق من حجم الشاشة (موبايل/تابلت/ديسكتوب)
- * @returns حجم الشاشة الحالي
- * 
- * @example
- * const { isMobile, isTablet, isDesktop } = useScreenSize();
- */
-export function useScreenSize() {
-    const [screenSize, setScreenSize] = useState({
-        width: typeof window !== 'undefined' ? window.innerWidth : 0,
-        height: typeof window !== 'undefined' ? window.innerHeight : 0,
-    });
-
-    useEffect(() => {
-        if (typeof window === 'undefined') return;
-
-        const handleResize = () => {
-            setScreenSize({
-                width: window.innerWidth,
-                height: window.innerHeight,
-            });
-        };
-
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
-
-    return {
-        width: screenSize.width,
-        height: screenSize.height,
-        isMobile: screenSize.width < 640,
-        isTablet: screenSize.width >= 640 && screenSize.width < 1024,
-        isDesktop: screenSize.width >= 1024,
-        isLargeDesktop: screenSize.width >= 1280,
-    };
-}
+// useScreenSize has been removed to avoid duplication with hooks/useScreenSize.ts
 
 /**
  * Hook للتحقق من Media Query

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { Search, X, Filter, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -18,13 +18,17 @@ interface SearchBarProps {
     value: string;
     onChange: (value: string) => void;
   }[];
+  actionButton?: React.ReactNode;
 }
 
-export function SearchBar({ placeholder = 'بحث...', value, onChange, filters }: SearchBarProps) {
+export function SearchBar({ placeholder = 'بحث...', value, onChange, filters, actionButton }: SearchBarProps) {
   const [showFilters, setShowFilters] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const hasActiveFilters = filters?.some(f => f.value !== 'all' && f.value !== '');
+  // استخدام useMemo لتحسين الأداء - حساب الـ filters مرة واحدة فقط
+  const hasActiveFilters = useMemo(() =>
+    filters?.some(f => f.value !== 'all' && f.value !== '') ?? false
+    , [filters]);
 
   return (
     <div className="space-y-2">
@@ -46,6 +50,7 @@ export function SearchBar({ placeholder = 'بحث...', value, onChange, filters 
                 onChange('');
                 inputRef.current?.focus();
               }}
+              aria-label="مسح البحث"
               className="absolute left-3 top-1/2 -translate-y-1/2 p-0.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
             >
               <X className="w-4 h-4" />
@@ -53,15 +58,16 @@ export function SearchBar({ placeholder = 'بحث...', value, onChange, filters 
           )}
         </div>
 
+        {actionButton}
+
         {/* Filter Toggle Button */}
         {filters && filters.length > 0 && (
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium transition-all ${
-              showFilters || hasActiveFilters
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium transition-all ${showFilters || hasActiveFilters
                 ? 'bg-primary/10 border-primary/30 text-primary'
                 : 'bg-card border-border text-muted-foreground hover:text-foreground hover:border-primary/30'
-            }`}
+              }`}
           >
             <Filter className="w-4 h-4" />
             <span className="hidden sm:inline">تصفية</span>
@@ -104,7 +110,7 @@ export function SearchBar({ placeholder = 'بحث...', value, onChange, filters 
                   </select>
                 </div>
               ))}
-              
+
               {hasActiveFilters && (
                 <button
                   onClick={() => filters.forEach(f => f.onChange('all'))}

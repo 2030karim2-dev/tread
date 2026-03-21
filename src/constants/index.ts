@@ -1,3 +1,5 @@
+import { Building2, Car, Coffee, PackageOpen, Users, FileText, Ship, Plane, LucideIcon } from 'lucide-react';
+
 // ===== Status Labels & Styles =====
 export const STATUS_LABELS: Record<string, string> = {
   planning: 'مخطط',
@@ -24,13 +26,13 @@ export const STATUS_STYLES: Record<string, string> = {
 };
 
 // ===== Expense Categories =====
-export const EXPENSE_CATEGORIES: Record<string, { label: string; style: string }> = {
-  hotel:      { label: '🏨 فندق',    style: 'bg-primary/10 text-primary' },
-  transport:  { label: '🚗 تنقلات',  style: 'bg-secondary/10 text-secondary' },
-  food:       { label: '🍜 طعام',    style: 'bg-accent/10 text-accent' },
-  samples:    { label: '📦 عينات',   style: 'bg-info/15 text-info' },
-  translator: { label: '🗣️ مترجم',  style: 'bg-warning/15 text-warning' },
-  other:      { label: '📋 أخرى',    style: 'bg-muted text-muted-foreground' },
+export const EXPENSE_CATEGORIES: Record<string, { label: string; style: string; icon?: LucideIcon }> = {
+  hotel:      { label: 'فندق',    style: 'bg-primary/10 text-primary', icon: Building2 },
+  transport:  { label: 'تنقلات',  style: 'bg-secondary/10 text-secondary', icon: Car },
+  food:       { label: 'طعام',    style: 'bg-accent/10 text-accent', icon: Coffee },
+  samples:    { label: 'عينات',   style: 'bg-info/15 text-info', icon: PackageOpen },
+  translator: { label: 'مترجم',  style: 'bg-warning/15 text-warning', icon: Users },
+  other:      { label: 'أخرى',    style: 'bg-muted text-muted-foreground', icon: FileText },
 };
 
 // ===== Currencies =====
@@ -44,8 +46,8 @@ export type CurrencyCode = typeof CURRENCIES[number]['code'];
 
 // ===== Shipping Types =====
 export const SHIPPING_TYPES = [
-  { value: 'sea', label: '🚢 بحري' },
-  { value: 'air', label: '✈️ جوي' },
+  { value: 'sea', label: 'بحري', icon: Ship },
+  { value: 'air', label: 'جوي', icon: Plane },
 ] as const;
 
 // ===== Empty States =====

@@ -195,6 +195,21 @@ export const shipmentSchema = z.object({
     ]).optional(),
 });
 
+// Customer schema
+export const customerSchema = z.object({
+    name: z.string().trim().min(1, 'اسم العميل مطلوب').max(100),
+    company_name: z.string().max(100).optional().default(''),
+    city: z.string().trim().min(1, 'المدينة مطلوبة'),
+    phone: z.string().trim().min(1, 'رقم الهاتف مطلوب'),
+    notes: z.string().max(500).optional().default(''),
+});
+
+export type TripFormData = z.infer<typeof tripSchema>;
+export type SupplierFormData = z.infer<typeof supplierSchema>;
+export type ExpenseFormData = z.infer<typeof expenseSchema>;
+export type CustomerFormData = z.infer<typeof customerSchema>;
+export type ShipmentFormData = z.infer<typeof shipmentSchema>;
+
 /**
  * Helper functions للـ validation
  */

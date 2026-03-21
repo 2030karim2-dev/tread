@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Plus, MapPin, Calendar, Edit2, Trash2, MoreVertical } from 'lucide-react';
 import { PageHeader, StatusBadge, EmptyState, TextField, SearchBar, ExportButton, ConfirmDialog } from '@/components/shared';
 import { useAppStore } from '@/store/useAppStore';
-import { tripSchema } from '@/lib/validations';
+import { tripSchema } from '@/lib/validation';
 import { EMPTY_MESSAGES, STATUS_LABELS } from '@/constants';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -25,7 +25,7 @@ export default function TripsPage() {
 
   const filteredTrips = useMemo(() => {
     return trips.filter(trip => {
-      const matchesSearch = search === '' || 
+      const matchesSearch = search === '' ||
         trip.name.toLowerCase().includes(search.toLowerCase()) ||
         trip.city.toLowerCase().includes(search.toLowerCase()) ||
         trip.country.toLowerCase().includes(search.toLowerCase());
@@ -43,7 +43,7 @@ export default function TripsPage() {
       return;
     }
     const d = result.data;
-    
+
     if (editingTrip) {
       updateTrip(editingTrip.id, { name: d.name, country: d.country, city: d.city, start_date: d.start_date, end_date: d.end_date, notes: d.notes || '' });
       toast({ title: 'تم التحديث', description: 'تم تحديث الرحلة بنجاح' });
@@ -51,7 +51,7 @@ export default function TripsPage() {
       addTrip({ name: d.name, country: d.country, city: d.city, start_date: d.start_date, end_date: d.end_date, notes: d.notes || '', status: 'planning' });
       toast({ title: 'تمت الإضافة', description: 'تم إضافة الرحلة بنجاح' });
     }
-    
+
     setForm(emptyForm);
     setErrors({});
     setEditingTrip(null);
@@ -134,9 +134,9 @@ export default function TripsPage() {
             key: 'status',
             label: 'الحالة',
             options: [
-              { value: 'planning', label: STATUS_LABELS.planning },
-              { value: 'active', label: STATUS_LABELS.active },
-              { value: 'completed', label: STATUS_LABELS.completed },
+              { value: 'planning', label: STATUS_LABELS.planning || 'مخطط' },
+              { value: 'active', label: STATUS_LABELS.active || 'جارية' },
+              { value: 'completed', label: STATUS_LABELS.completed || 'مكتملة' },
             ],
             value: statusFilter,
             onChange: setStatusFilter,
@@ -145,7 +145,7 @@ export default function TripsPage() {
       />
 
       {filteredTrips.length === 0 ? (
-        <EmptyState message={search || statusFilter !== 'all' ? 'لا توجد نتائج مطابقة للبحث' : EMPTY_MESSAGES.trips} />
+        <EmptyState message={search || statusFilter !== 'all' ? 'لا توجد نتائج مطابقة للبحث' : 'لا توجد رحلات بعد. أضف رحلتك الأولى!'} />
       ) : (
         <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredTrips.map((trip, i) => (
@@ -173,7 +173,7 @@ export default function TripsPage() {
                         <Edit2 className="w-4 h-4 ml-2" />
                         تعديل
                       </DropdownMenuItem>
-                      <DropdownMenuItem 
+                      <DropdownMenuItem
                         className="text-destructive focus:text-destructive"
                         onClick={() => setDeleteId(trip.id)}
                       >

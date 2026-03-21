@@ -11,6 +11,51 @@ export interface StorageOptions {
 }
 
 /**
+ * دالة بسيطة للتشفير
+ */
+export const encrypt = (data: string): string => {
+    try {
+        return btoa(encodeURIComponent(data));
+    } catch {
+        return data;
+    }
+};
+
+/**
+ * دالة بسيطة لفك التشفير
+ */
+export const decrypt = (data: string): string => {
+    try {
+        return decodeURIComponent(atob(data));
+    } catch {
+        return data;
+    }
+};
+
+/**
+ * مخزن مخصص لـ Zustand
+ */
+export const zustandStorage = {
+    getItem: (name: string): string | null => {
+        const str = localStorage.getItem(name);
+        if (!str) return null;
+        try {
+            // Check if it's already valid JSON (unencrypted legacy data)
+            if (str.startsWith('{"') || str.startsWith('[')) return str;
+            return decrypt(str);
+        } catch {
+            return str;
+        }
+    },
+    setItem: (name: string, value: string): void => {
+        localStorage.setItem(name, encrypt(value));
+    },
+    removeItem: (name: string): void => {
+        localStorage.removeItem(name);
+    },
+};
+
+/**
  * خدمة التخزين الموحدة
  */
 class StorageService {
@@ -28,7 +73,7 @@ class StorageService {
     set<T>(key: string, value: T): void {
         try {
             const serialized = JSON.stringify(value);
-            this.storage.setItem(this.getKey(key), serialized);
+            this.storage.setItem(this.getKey(key), encrypt(serialized));
         } catch (error) {
             console.error('Error saving to storage:', error);
         }
@@ -43,7 +88,15 @@ class StorageService {
             if (item === null) {
                 return defaultValue;
             }
-            return JSON.parse(item) as T;
+            let decrypted = item;
+            try {
+                if (!item.startsWith('{') && !item.startsWith('[')) {
+                    decrypted = decrypt(item);
+                }
+            } catch {
+                decrypted = item;
+            }
+            return JSON.parse(decrypted) as T;
         } catch (error) {
             console.error('Error reading from storage:', error);
             return defaultValue;

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { zustandStorage } from '@/services/storageService';
 import { Trip, Supplier, Product, Shipment, Expense, InventoryItem, Customer, Quotation, CompanySettings, CurrencyRates } from '@/types';
 import { mockTrips, mockSuppliers, mockProducts, mockShipments, mockExpenses, mockInventory } from '@/data/mock-data';
 import { generateId } from '@/lib/helpers';
@@ -305,6 +306,7 @@ export const useAppStore = create<AppState>()(
     {
       name: 'trade-navigator-store',
       version: 1,
+      storage: createJSONStorage(() => zustandStorage),
     }
   )
 );

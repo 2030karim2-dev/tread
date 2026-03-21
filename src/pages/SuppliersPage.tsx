@@ -2,10 +2,10 @@ import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus, Phone, MessageCircle, Building2, MapPin, Edit2, Trash2, MoreVertical } from 'lucide-react';
-import { PageHeader, StarRating, EmptyState, TextField, SearchBar, ExportButton, ConfirmDialog } from '@/components/shared';
+import { Plus, Phone, MessageCircle, Building2, MapPin, Edit2, Trash2, MoreVertical, LayoutGrid, Map } from 'lucide-react';
+import { PageHeader, StarRating, EmptyState, TextField, SearchBar, ExportButton, ConfirmDialog, SupplierMapPlaceholder } from '@/components/shared';
 import { useAppStore } from '@/store/useAppStore';
-import { supplierSchema, SupplierFormData } from '@/lib/validations';
+import { supplierSchema, SupplierFormData } from '@/lib/validation';
 import { EMPTY_MESSAGES } from '@/constants';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -13,8 +13,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { toast } from '@/hooks/use-toast';
 import { Supplier } from '@/types';
 
-const defaultValues: SupplierFormData = { 
-  name: '', company_name: '', city: '', phone: '', wechat_or_whatsapp: '', product_category: '', notes: '' 
+const defaultValues: SupplierFormData = {
+  name: '', company_name: '', city: '', phone: '', wechat_or_whatsapp: '', product_category: '', notes: ''
 };
 
 export default function SuppliersPage() {
@@ -29,6 +29,7 @@ export default function SuppliersPage() {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [cityFilter, setCityFilter] = useState('all');
+  const [view, setView] = useState<'grid' | 'map'>('grid');
 
   const { control, handleSubmit, reset, formState: { errors } } = useForm<SupplierFormData>({
     resolver: zodResolver(supplierSchema),
@@ -57,7 +58,7 @@ export default function SuppliersPage() {
 
   const filteredSuppliers = useMemo(() => {
     return suppliers.filter(supplier => {
-      const matchesSearch = search === '' || 
+      const matchesSearch = search === '' ||
         supplier.name.toLowerCase().includes(search.toLowerCase()) ||
         supplier.company_name.toLowerCase().includes(search.toLowerCase()) ||
         supplier.city.toLowerCase().includes(search.toLowerCase());
@@ -69,20 +70,20 @@ export default function SuppliersPage() {
 
   const onSubmit = (d: SupplierFormData) => {
     if (editingSupplier) {
-      updateSupplier(editingSupplier.id, { 
-        name: d.name, company_name: d.company_name, city: d.city, phone: d.phone, 
-        wechat_or_whatsapp: d.wechat_or_whatsapp || '', product_category: d.product_category, notes: d.notes || '' 
+      updateSupplier(editingSupplier.id, {
+        name: d.name, company_name: d.company_name, city: d.city, phone: d.phone,
+        wechat_or_whatsapp: d.wechat_or_whatsapp || '', product_category: d.product_category, notes: d.notes || ''
       });
       toast({ title: 'تم التحديث', description: 'تم تحديث المورد بنجاح' });
     } else {
-      addSupplier({ 
-        name: d.name, company_name: d.company_name, city: d.city, phone: d.phone, 
-        wechat_or_whatsapp: d.wechat_or_whatsapp || '', product_category: d.product_category, 
-        notes: d.notes || '', rating: 0, trip_id: '1' 
+      addSupplier({
+        name: d.name, company_name: d.company_name, city: d.city, phone: d.phone,
+        wechat_or_whatsapp: d.wechat_or_whatsapp || '', product_category: d.product_category,
+        notes: d.notes || '', rating: 0, trip_id: '1'
       });
       toast({ title: 'تمت الإضافة', description: 'تم إضافة المورد بنجاح' });
     }
-    
+
     setEditingSupplier(null);
     setOpen(false);
   };
@@ -114,6 +115,14 @@ export default function SuppliersPage() {
   return (
     <div className="space-y-3 sm:space-y-4 lg:space-y-6">
       <PageHeader title="الموردين" subtitle={`${suppliers.length} مورد مسجل`}>
+        <div className="flex gap-2">
+          <Button variant={view === 'grid' ? 'default' : 'outline'} size="sm" onClick={() => setView('grid')} className="w-10 px-0">
+            <LayoutGrid className="h-4 w-4" />
+          </Button>
+          <Button variant={view === 'map' ? 'default' : 'outline'} size="sm" onClick={() => setView('map')} className="w-10 px-0">
+            <Map className="h-4 w-4" />
+          </Button>
+        </div>
         <ExportButton data={suppliers} columns={exportColumns} filename="قائمة-الموردين" />
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { reset(defaultValues); setEditingSupplier(null); } }}>
           <DialogTrigger asChild>
@@ -187,7 +196,9 @@ export default function SuppliersPage() {
       />
 
       {filteredSuppliers.length === 0 ? (
-        <EmptyState message={search || categoryFilter !== 'all' || cityFilter !== 'all' ? 'لا توجد نتائج مطابقة للبحث' : EMPTY_MESSAGES.suppliers} />
+        <EmptyState message={search || categoryFilter !== 'all' || cityFilter !== 'all' ? 'لا توجد نتائج مطابقة للبحث' : 'لا يوجد موردين بعد. أضف أول مورد!'} />
+      ) : view === 'map' ? (
+        <SupplierMapPlaceholder />
       ) : (
         <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filteredSuppliers.map((sup, i) => (
@@ -226,7 +237,7 @@ export default function SuppliersPage() {
                         <Edit2 className="w-4 h-4 ml-2" />
                         تعديل
                       </DropdownMenuItem>
-                      <DropdownMenuItem 
+                      <DropdownMenuItem
                         className="text-destructive focus:text-destructive"
                         onClick={() => setDeleteId(sup.id)}
                       >
@@ -237,7 +248,7 @@ export default function SuppliersPage() {
                   </DropdownMenu>
                 </div>
               </div>
-              
+
               <div className="flex flex-wrap gap-1 mb-2">
                 <span className="inline-flex items-center bg-secondary/10 text-secondary rounded-md px-1.5 py-0.5 text-[9px] font-semibold max-w-full truncate">
                   {sup.product_category}

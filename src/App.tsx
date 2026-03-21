@@ -14,6 +14,7 @@ import { useEffect } from 'react';
 // Lazy loaded pages
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const TripsPage = lazy(() => import("./pages/TripsPage"));
+const AccommodationPage = lazy(() => import("./pages/AccommodationPage"));
 const SuppliersPage = lazy(() => import("./pages/SuppliersPage"));
 const ProductsPage = lazy(() => import("./pages/ProductsPage"));
 const QuotationsPage = lazy(() => import("./pages/QuotationsPage"));
@@ -59,6 +60,7 @@ const App = () => (
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/trips" element={<TripsPage />} />
+                  <Route path="/accommodation" element={<AccommodationPage />} />
                   <Route path="/suppliers" element={<SuppliersPage />} />
                   <Route path="/products" element={<ProductsPage />} />
                   <Route path="/quotations" element={<QuotationsPage />} />

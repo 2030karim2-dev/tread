@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Plus, Edit2, Trash2, MoreVertical } from 'lucide-react';
 import { PageHeader, EmptyState, TextField, SelectField, SearchBar, ExportButton, ConfirmDialog } from '@/components/shared';
 import { useAppStore } from '@/store/useAppStore';
-import { expenseSchema } from '@/lib/validations';
+import { expenseSchema } from '@/lib/validation';
 import { Expense } from '@/types';
 import { EXPENSE_CATEGORIES, CURRENCIES, EMPTY_MESSAGES } from '@/constants';
 import { convertCurrency, getCurrencySymbol } from '@/lib/currency';
@@ -28,7 +28,7 @@ export default function ExpensesPage() {
 
   const filteredExpenses = useMemo(() => {
     return expenses.filter(expense => {
-      const matchesSearch = search === '' || 
+      const matchesSearch = search === '' ||
         expense.notes.toLowerCase().includes(search.toLowerCase());
       const matchesCategory = categoryFilter === 'all' || expense.category === categoryFilter;
       const matchesCurrency = currencyFilter === 'all' || expense.currency === currencyFilter;
@@ -51,13 +51,13 @@ export default function ExpensesPage() {
     }
 
     if (editingExpense) {
-      updateExpense(editingExpense.id, result.data);
+      updateExpense(editingExpense.id, result.data as Partial<Expense>);
       toast({ title: 'تم التحديث', description: 'تم تحديث المصروف بنجاح' });
     } else {
       addExpense({ trip_id: '1', ...result.data } as Omit<Expense, 'id'>);
       toast({ title: 'تمت الإضافة', description: 'تم إضافة المصروف بنجاح' });
     }
-    
+
     setForm(emptyForm);
     setErrors({});
     setEditingExpense(null);
@@ -112,12 +112,12 @@ export default function ExpensesPage() {
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-3 mt-2">
-              <SelectField label="التصنيف" value={form.category} onChange={v => setForm({ ...form, category: v })} options={categoryOptions} error={errors.category} />
+              <SelectField label="التصنيف" value={form.category} onChange={v => setForm({ ...form, category: v })} options={categoryOptions} {...(errors.category ? { error: errors.category } : {})} />
               <div className="grid grid-cols-2 gap-3">
-                <TextField label="المبلغ" value={form.amount} onChange={v => setForm({ ...form, amount: v })} type="number" error={errors.amount} />
+                <TextField label="المبلغ" value={form.amount} onChange={v => setForm({ ...form, amount: v })} type="number" {...(errors.amount ? { error: errors.amount } : {})} />
                 <SelectField label="العملة" value={form.currency} onChange={v => setForm({ ...form, currency: v })} options={currencyOptions} />
               </div>
-              <TextField label="التاريخ" value={form.date} onChange={v => setForm({ ...form, date: v })} type="date" error={errors.date} />
+              <TextField label="التاريخ" value={form.date} onChange={v => setForm({ ...form, date: v })} type="date" {...(errors.date ? { error: errors.date } : {})} />
               <TextField label="ملاحظات" value={form.notes} onChange={v => setForm({ ...form, notes: v })} />
               <Button onClick={handleAdd} className="w-full gradient-primary text-primary-foreground">
                 {editingExpense ? 'تحديث' : 'حفظ'}
@@ -167,21 +167,24 @@ export default function ExpensesPage() {
       </div>
 
       {filteredExpenses.length === 0 ? (
-        <EmptyState message={search || categoryFilter !== 'all' || currencyFilter !== 'all' ? 'لا توجد نتائج مطابقة' : EMPTY_MESSAGES.expenses} />
+        <EmptyState message={search || categoryFilter !== 'all' || currencyFilter !== 'all' ? 'لا توجد نتائج مطابقة' : 'لا توجد مصروفات بعد.'} />
       ) : (
         <div className="space-y-2">
           {filteredExpenses.map((exp, i) => {
             const cat = EXPENSE_CATEGORIES[exp.category];
             return (
-              <motion.div 
-                key={exp.id} 
-                initial={{ opacity: 0, x: 20 }} 
-                animate={{ opacity: 1, x: 0 }} 
-                transition={{ delay: i * 0.03 }} 
+              <motion.div
+                key={exp.id}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.03 }}
                 className="group bg-card rounded-xl border border-border p-4 shadow-sm flex items-center justify-between"
               >
                 <div className="flex items-center gap-3">
-                  <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${cat?.style || ''}`}>{cat?.label || exp.category}</span>
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold ${cat?.style || ''}`}>
+                    {cat?.icon && <cat.icon className="w-3.5 h-3.5" />}
+                    <span>{cat?.label || exp.category}</span>
+                  </span>
                   <div>
                     <p className="text-sm font-medium">{exp.notes || 'بدون ملاحظات'}</p>
                     <p className="text-xs text-muted-foreground">{exp.date}</p>
@@ -196,7 +199,7 @@ export default function ExpensesPage() {
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className="p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-muted transition-all">
+                      <button aria-label="خيارات" className="p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-muted transition-all">
                         <MoreVertical className="w-4 h-4 text-muted-foreground" />
                       </button>
                     </DropdownMenuTrigger>
@@ -205,7 +208,7 @@ export default function ExpensesPage() {
                         <Edit2 className="w-4 h-4 ml-2" />
                         تعديل
                       </DropdownMenuItem>
-                      <DropdownMenuItem 
+                      <DropdownMenuItem
                         className="text-destructive focus:text-destructive"
                         onClick={() => setDeleteId(exp.id)}
                       >

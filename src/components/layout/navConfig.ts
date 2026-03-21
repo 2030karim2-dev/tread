@@ -14,10 +14,10 @@ import {
     ShoppingCart,
     Receipt,
     DollarSign,
-    Settings,
     RefreshCw,
     BookOpen,
     StickyNote,
+    Building2,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -47,6 +47,7 @@ export const NAV_GROUPS: NavGroup[] = [
         items: [
             { path: '/', label: 'لوحة التحكم', icon: LayoutDashboard },
             { path: '/trips', label: 'الرحلات', icon: Plane },
+            { path: '/accommodation', label: 'السكن', icon: Building2 },
         ],
     },
     {

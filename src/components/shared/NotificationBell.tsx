@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, X, AlertTriangle, Ship, Package } from 'lucide-react';
+import { Bell, AlertTriangle, Ship, Package } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 
 interface Notification {
@@ -16,46 +16,50 @@ export function NotificationBell() {
   const { inventory, shipments } = useAppStore();
   const [open, setOpen] = useState(false);
 
-  const notifications: Notification[] = [];
+  const notifications = useMemo(() => {
+    const notifs: Notification[] = [];
 
-  // Low stock notifications
-  inventory.forEach(item => {
-    const pct = (item.quantity_available / item.quantity_purchased) * 100;
-    if (pct < 30) {
-      notifications.push({
-        id: `stock-${item.id}`,
-        type: 'low_stock',
-        title: 'مخزون منخفض',
-        message: `${item.product_name} - متبقي ${item.quantity_available} من ${item.quantity_purchased}`,
-        icon: AlertTriangle,
-        color: 'text-destructive bg-destructive/10',
-      });
-    }
-  });
+    // Low stock notifications
+    inventory.forEach(item => {
+      const pct = (item.quantity_available / item.quantity_purchased) * 100;
+      if (pct < 30) {
+        notifs.push({
+          id: `stock-${item.id}`,
+          type: 'low_stock',
+          title: 'مخزون منخفض',
+          message: `${item.product_name} - متبقي ${item.quantity_available} من ${item.quantity_purchased}`,
+          icon: AlertTriangle,
+          color: 'text-destructive bg-destructive/10',
+        });
+      }
+    });
 
-  // Shipment notifications
-  shipments.forEach(s => {
-    if (s.status === 'in_transit') {
-      notifications.push({
-        id: `ship-${s.id}`,
-        type: 'shipment',
-        title: 'شحنة في الطريق',
-        message: `${s.shipment_number} - متوقع الوصول ${s.expected_arrival_date}`,
-        icon: Ship,
-        color: 'text-info bg-info/10',
-      });
-    }
-    if (s.status === 'arrived') {
-      notifications.push({
-        id: `ship-arrived-${s.id}`,
-        type: 'shipment',
-        title: 'شحنة وصلت',
-        message: `${s.shipment_number} - وصلت إلى ${s.arrival_port}`,
-        icon: Package,
-        color: 'text-accent bg-accent/10',
-      });
-    }
-  });
+    // Shipment notifications
+    shipments.forEach(s => {
+      if (s.status === 'in_transit') {
+        notifs.push({
+          id: `ship-${s.id}`,
+          type: 'shipment',
+          title: 'شحنة في الطريق',
+          message: `${s.shipment_number} - متوقع الوصول ${s.expected_arrival_date}`,
+          icon: Ship,
+          color: 'text-info bg-info/10',
+        });
+      }
+      if (s.status === 'arrived') {
+        notifs.push({
+          id: `ship-arrived-${s.id}`,
+          type: 'shipment',
+          title: 'شحنة وصلت',
+          message: `${s.shipment_number} - وصلت إلى ${s.arrival_port}`,
+          icon: Package,
+          color: 'text-accent bg-accent/10',
+        });
+      }
+    });
+
+    return notifs;
+  }, [inventory, shipments]);
 
   return (
     <div className="relative">
@@ -99,7 +103,7 @@ export function NotificationBell() {
                     لا توجد إشعارات جديدة
                   </div>
                 ) : (
-                  notifications.map((n, i) => (
+                  notifications.map((n: Notification, i: number) => (
                     <motion.div
                       key={n.id}
                       initial={{ opacity: 0, x: -10 }}

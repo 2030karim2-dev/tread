@@ -3,22 +3,21 @@ import { Button } from '@/components/ui/button';
 import { exportToCSV } from '@/lib/export';
 import { toast } from '@/hooks/use-toast';
 
-interface ExportButtonProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  data: any[];
+interface ExportButtonProps<T extends Record<string, unknown>> {
+  data: T[];
   columns: { key: string; header: string }[];
   filename: string;
   variant?: 'default' | 'outline' | 'ghost';
   size?: 'default' | 'sm' | 'icon';
 }
 
-export function ExportButton({
+export function ExportButton<T extends Record<string, unknown>>({
   data,
   columns,
   filename,
   variant = 'outline',
   size = 'default',
-}: ExportButtonProps) {
+}: ExportButtonProps<T>) {
   const handleExport = () => {
     if (data.length === 0) {
       toast({
@@ -43,6 +42,7 @@ export function ExportButton({
         size="icon"
         onClick={handleExport}
         title="تصدير CSV"
+        aria-label="تصدير CSV"
       >
         <Download className="w-4 h-4" />
       </Button>

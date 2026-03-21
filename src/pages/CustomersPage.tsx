@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus, Phone, MapPin, Edit2, Trash2, MoreVertical } from 'lucide-react';
 import { PageHeader, EmptyState, TextField, SearchBar, ExportButton, ConfirmDialog } from '@/components/shared';
 import { useAppStore } from '@/store/useAppStore';
-import { customerSchema, CustomerFormData } from '@/lib/validations';
+import { customerSchema, CustomerFormData } from '@/lib/validation';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
