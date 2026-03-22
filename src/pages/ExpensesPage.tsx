@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Edit2, Trash2, MoreVertical } from 'lucide-react';
 import { PageHeader, EmptyState, TextField, SelectField, SearchBar, ExportButton, ConfirmDialog } from '@/components/shared';
@@ -40,11 +40,24 @@ export default function ExpensesPage() {
     });
   }, [expenses, search, categoryFilter, currencyFilter]);
 
-  const totalCNY = filteredExpenses.filter(e => e.currency === 'CNY').reduce((s, e) => s + e.amount, 0);
-  const totalUSD = filteredExpenses.filter(e => e.currency === 'USD').reduce((s, e) => s + e.amount, 0) + convertCurrency(totalCNY, 'CNY', 'USD');
-  const totalSAR = filteredExpenses.filter(e => e.currency === 'SAR').reduce((s, e) => s + e.amount, 0);
+  const totalCNY = useMemo(() =>
+    filteredExpenses.filter(e => e.currency === 'CNY').reduce((s, e) => s + e.amount, 0),
+    [filteredExpenses]
+  );
+  const totalUSD = useMemo(() => {
+    const usdExpenses = filteredExpenses.filter(e => e.currency === 'USD').reduce((s, e) => s + e.amount, 0);
+    try {
+      return usdExpenses + convertCurrency(totalCNY, 'CNY', 'USD');
+    } catch {
+      return usdExpenses;
+    }
+  }, [filteredExpenses, totalCNY]);
+  const totalSAR = useMemo(() =>
+    filteredExpenses.filter(e => e.currency === 'SAR').reduce((s, e) => s + e.amount, 0),
+    [filteredExpenses]
+  );
 
-  const handleAdd = () => {
+  const handleAdd = useCallback(() => {
     const parsed = { ...form, amount: Number(form.amount) };
     const result = expenseSchema.safeParse(parsed);
     if (!result.success) {
@@ -66,9 +79,9 @@ export default function ExpensesPage() {
     setErrors({});
     setEditingExpense(null);
     setOpen(false);
-  };
+  }, [form, editingExpense, updateExpense, addExpense]);
 
-  const handleEdit = (expense: Expense) => {
+  const handleEdit = useCallback((expense: Expense) => {
     setEditingExpense(expense);
     setForm({
       category: expense.category,
@@ -78,26 +91,32 @@ export default function ExpensesPage() {
       notes: expense.notes,
     });
     setOpen(true);
-  };
+  }, []);
 
-  const handleDelete = () => {
+  const handleDelete = useCallback(() => {
     if (deleteId) {
       deleteExpense(deleteId);
       toast({ title: 'تم الحذف', description: 'تم حذف المصروف بنجاح' });
       setDeleteId(null);
     }
-  };
+  }, [deleteId, deleteExpense]);
 
-  const categoryOptions = Object.entries(EXPENSE_CATEGORIES).map(([k, v]) => ({ value: k, label: v.label }));
-  const currencyOptions = CURRENCIES.map(c => ({ value: c.code, label: c.label }));
+  const categoryOptions = useMemo(() =>
+    Object.entries(EXPENSE_CATEGORIES).map(([k, v]) => ({ value: k, label: v.label })),
+    []
+  );
+  const currencyOptions = useMemo(() =>
+    CURRENCIES.map(c => ({ value: c.code, label: c.label })),
+    []
+  );
 
-  const exportColumns = [
+  const exportColumns = useMemo(() => [
     { key: 'category', header: 'التصنيف' },
     { key: 'amount', header: 'المبلغ' },
     { key: 'currency', header: 'العملة' },
     { key: 'date', header: 'التاريخ' },
     { key: 'notes', header: 'ملاحظات' },
-  ];
+  ], []);
 
   return (
     <div className="space-y-3 sm:space-y-4 lg:space-y-6">
@@ -198,7 +217,13 @@ export default function ExpensesPage() {
                   <div className="text-left">
                     <p className="font-bold text-sm">{getCurrencySymbol(exp.currency as 'CNY' | 'USD' | 'SAR')}{formatNumber(exp.amount)}</p>
                     {exp.currency === 'CNY' && (
-                      <p className="text-xs text-muted-foreground">${formatNumber(convertCurrency(exp.amount, 'CNY', 'USD'))}</p>
+                      <p className="text-xs text-muted-foreground">${formatNumber((() => {
+                        try {
+                          return convertCurrency(exp.amount, 'CNY', 'USD');
+                        } catch {
+                          return 0;
+                        }
+                      })())}</p>
                     )}
                   </div>
                   <DropdownMenu>

@@ -1,7 +1,7 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, FileText, Printer, Trash2 } from 'lucide-react';
-import { PageHeader, EditableTable, ConfirmDialog } from '@/components/shared';
+import { Plus, FileText, Printer, Trash2, Package } from 'lucide-react';
+import { PageHeader, EditableTable, ConfirmDialog, ProductSelectionModal } from '@/components/shared';
 import type { ColumnDef } from '@/components/shared';
 import { formatNumber, generateId } from '@/lib/helpers';
 import { Button } from '@/components/ui/button';
@@ -16,9 +16,11 @@ export default function PurchasesPage() {
   const addPurchaseInvoice = useAppStore(s => s.addPurchaseInvoice);
   const updatePurchaseInvoice = useAppStore(s => s.updatePurchaseInvoice);
   const deletePurchaseInvoice = useAppStore(s => s.deletePurchaseInvoice);
+  const shipments = useAppStore(s => s.shipments);
 
   const [activeId, setActiveId] = useState(invoices[0]?.id || '');
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [selectionOpen, setSelectionOpen] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
   const activeInvoice = invoices.find(inv => inv.id === activeId) || invoices[0];
@@ -39,20 +41,22 @@ export default function PurchasesPage() {
     );
   }
 
-  function addInvoiceHandler() {
+  const addInvoiceHandler = useCallback(() => {
     const num = invoices.length + 1;
     const newInv: Omit<StorePurchaseInvoice, 'id'> = {
       number: `INV-2025-${String(num).padStart(3, '0')}`,
       supplier_id: '', supplier_name: 'مورد جديد',
       trip_id: '', trip_name: '',
-      date: new Date().toISOString().split('T')[0],
+      date: new Date().toISOString().split('T')[0] ?? '',
+      currency: 'USD',
+      amount_paid: 0,
       items: [],
     };
     addPurchaseInvoice(newInv);
     toast({ title: 'تمت الإضافة', description: 'تم إنشاء فاتورة جديدة' });
-  }
+  }, [invoices.length, addPurchaseInvoice]);
 
-  const handlePrint = () => window.print();
+  const handlePrint = useCallback(() => window.print(), []);
 
   const onCellChange = useCallback((itemId: string, field: string, value: string | number) => {
     if (!activeInvoice) return;
@@ -62,21 +66,37 @@ export default function PurchasesPage() {
     updatePurchaseInvoice(activeInvoice.id, { items: updatedItems });
   }, [activeInvoice, updatePurchaseInvoice]);
 
-  const addRow = () => {
+  const addRow = useCallback(() => {
     if (!activeInvoice) return;
     const newItem: StorePurchaseInvoiceItem = {
       id: generateId(), product_name: '', oem_number: '', brand: '',
       quantity: 0, purchase_price: 0, sale_price: 0, size: '',
     };
     updatePurchaseInvoice(activeInvoice.id, { items: [...activeInvoice.items, newItem] });
-  };
+  }, [activeInvoice, updatePurchaseInvoice]);
 
-  const deleteRow = (itemId: string) => {
+  const deleteRow = useCallback((itemId: string) => {
     if (!activeInvoice) return;
     updatePurchaseInvoice(activeInvoice.id, { items: activeInvoice.items.filter(i => i.id !== itemId) });
-  };
+  }, [activeInvoice, updatePurchaseInvoice]);
 
-  const handleDeleteInvoice = () => {
+  const handleProductsSelect = useCallback((selectedProducts: any[]) => {
+    if (!activeInvoice) return;
+    const newItems: StorePurchaseInvoiceItem[] = selectedProducts.map(p => ({
+      id: generateId(),
+      product_name: p.name,
+      oem_number: p.oem_number || '',
+      brand: p.brand || '',
+      quantity: 1,
+      purchase_price: p.purchase_price || 0,
+      sale_price: p.sale_price || 0,
+      size: p.size || '',
+    }));
+    updatePurchaseInvoice(activeInvoice.id, { items: [...activeInvoice.items, ...newItems] });
+    toast({ title: 'تمت الإضافة', description: `تم إضافة ${selectedProducts.length} منتج للفاتورة` });
+  }, [activeInvoice, updatePurchaseInvoice]);
+
+  const handleDeleteInvoice = useCallback(() => {
     if (deleteId) {
       deletePurchaseInvoice(deleteId);
       if (activeId === deleteId) {
@@ -85,27 +105,31 @@ export default function PurchasesPage() {
       toast({ title: 'تم الحذف', description: 'تم حذف الفاتورة بنجاح' });
       setDeleteId(null);
     }
-  };
+  }, [deleteId, activeId, deletePurchaseInvoice, invoices]);
 
-  const handleSupplierChange = (supplierId: string) => {
+  const handleSupplierChange = useCallback((supplierId: string) => {
     const supplier = suppliers.find(s => s.id === supplierId);
     updatePurchaseInvoice(activeInvoice.id, {
       supplier_id: supplierId,
       supplier_name: supplier?.name || '',
     });
-  };
+  }, [activeInvoice, suppliers, updatePurchaseInvoice]);
 
-  const handleTripChange = (tripId: string) => {
+  const handleTripChange = useCallback((tripId: string) => {
     const trip = trips.find(t => t.id === tripId);
     updatePurchaseInvoice(activeInvoice.id, {
       trip_id: tripId,
       trip_name: trip?.name || '',
     });
-  };
+  }, [activeInvoice, trips, updatePurchaseInvoice]);
+
+  const handleShipmentChange = useCallback((shipmentId: string) => {
+    updatePurchaseInvoice(activeInvoice.id, { shipment_id: shipmentId });
+  }, [activeInvoice, updatePurchaseInvoice]);
 
   const total = activeInvoice.items.reduce((s, i) => s + i.quantity * i.purchase_price, 0);
 
-  const columns: ColumnDef<StorePurchaseInvoiceItem>[] = [
+  const columns: ColumnDef<StorePurchaseInvoiceItem>[] = useMemo(() => [
     { key: 'product_name', header: 'المنتج', minWidth: '140px' },
     { key: 'oem_number', header: 'رقم OEM', minWidth: '110px', mono: true },
     { key: 'brand', header: 'العلامة', minWidth: '80px' },
@@ -113,15 +137,34 @@ export default function PurchasesPage() {
     { key: 'purchase_price', header: 'سعر الشراء', minWidth: '80px', type: 'number', align: 'center' },
     { key: 'sale_price', header: 'سعر البيع', minWidth: '80px', type: 'number', align: 'center' },
     { key: 'size', header: 'المقاس', minWidth: '70px' },
-    { key: 'total', header: 'الإجمالي', minWidth: '80px', editable: false, align: 'center', render: (row) => <span className="font-semibold">${formatNumber(row.quantity * row.purchase_price)}</span> },
-  ];
+    { key: 'total' as keyof StorePurchaseInvoiceItem, header: 'الإجمالي', minWidth: '80px', editable: false, align: 'center', render: (row) => <span className="font-semibold">${formatNumber(row.quantity * row.purchase_price)}</span> },
+  ], []);
 
-  const footer = (
-    <tr className="bg-muted/50 font-bold">
-      <td colSpan={8} className="spreadsheet-cell text-sm">الإجمالي</td>
-      <td className="spreadsheet-cell text-center text-sm">${formatNumber(total)}</td>
-    </tr>
-  );
+  const footer = useMemo(() => (
+    <>
+      <tr className="bg-muted/50 font-bold border-t-2 border-primary/20">
+        <td colSpan={8} className="spreadsheet-cell text-sm">إجمالي الفاتورة</td>
+        <td className="spreadsheet-cell text-center text-sm">{formatNumber(total)} <span className="text-[10px]">{activeInvoice.currency}</span></td>
+      </tr>
+      <tr className="bg-green-500/5 font-bold">
+        <td colSpan={8} className="spreadsheet-cell text-sm text-green-600 italic">المبلغ المدفوع</td>
+        <td className="spreadsheet-cell p-0">
+          <input 
+            type="number" 
+            value={activeInvoice.amount_paid} 
+            onChange={e => updatePurchaseInvoice(activeInvoice.id, { amount_paid: Number(e.target.value) })}
+            className="w-full h-full bg-transparent border-none text-center text-sm text-green-700 focus:ring-1 ring-green-500 outline-none font-black"
+          />
+        </td>
+      </tr>
+      <tr className="bg-orange-500/10 font-bold">
+        <td colSpan={8} className="spreadsheet-cell text-sm text-orange-600 italic">المبلغ المتبقي (Debt)</td>
+        <td className="spreadsheet-cell text-center text-sm text-orange-700 font-black">
+          {formatNumber(Math.max(0, total - activeInvoice.amount_paid))} <span className="text-[10px]">{activeInvoice.currency}</span>
+        </td>
+      </tr>
+    </>
+  ), [total, activeInvoice.amount_paid, activeInvoice.currency, activeInvoice.id, updatePurchaseInvoice]);
 
   return (
     <div className="space-y-3 sm:space-y-4 lg:space-y-6">
@@ -130,8 +173,11 @@ export default function PurchasesPage() {
           <Button onClick={handlePrint} variant="outline" className="gap-2">
             <Printer className="w-4 h-4" /> طباعة
           </Button>
+          <Button onClick={() => setSelectionOpen(true)} variant="outline" className="gap-2 font-bold border-primary/20 hover:bg-primary/5">
+            <Package className="w-4 h-4 text-primary" /> اختر من الكتالوج
+          </Button>
           <Button onClick={addRow} className="gradient-primary text-primary-foreground gap-2">
-            <Plus className="w-4 h-4" /> إضافة صف
+            <Plus className="w-4 h-4" /> إضافة سطر فارغ
           </Button>
         </div>
       </PageHeader>
@@ -149,11 +195,10 @@ export default function PurchasesPage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.05 }}
               onClick={() => setActiveId(inv.id)}
-              className={`w-full text-right p-3 rounded-xl border transition-all group/card ${
-                inv.id === activeId
-                  ? 'bg-primary/10 border-primary/30 shadow-sm'
-                  : 'bg-card border-border hover:bg-muted/50'
-              }`}
+              className={`w-full text-right p-3 rounded-xl border transition-all group/card ${inv.id === activeId
+                ? 'bg-primary/10 border-primary/30 shadow-sm'
+                : 'bg-card border-border hover:bg-muted/50'
+                }`}
             >
               <div className="flex items-center gap-2">
                 <div className={`p-1.5 rounded-lg ${inv.id === activeId ? 'gradient-primary' : 'bg-muted'}`}>
@@ -224,6 +269,31 @@ export default function PurchasesPage() {
                   ))}
                 </select>
               </div>
+              <div className="col-span-1">
+                <label className="text-muted-foreground text-[10px]">العملة</label>
+                <select
+                  value={activeInvoice.currency}
+                  onChange={e => updatePurchaseInvoice(activeInvoice.id, { currency: e.target.value })}
+                  className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs font-bold"
+                >
+                  <option value="USD">USD - دولار 🇺🇸</option>
+                  <option value="SAR">SAR - ريال 🇸🇦</option>
+                  <option value="CNY">CNY - ين ريمبامبي 🇨🇳</option>
+                </select>
+              </div>
+              <div className="col-span-1">
+                <label className="text-muted-foreground text-[10px]">الشحنة / الحاوية</label>
+                <select
+                  value={activeInvoice.shipment_id || ''}
+                  onChange={e => handleShipmentChange(e.target.value)}
+                  className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs font-bold text-primary"
+                >
+                  <option value="">بانتظار التحميل...</option>
+                  {shipments.map(s => (
+                    <option key={s.id} value={s.id}>{s.shipment_number}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
@@ -251,6 +321,12 @@ export default function PurchasesPage() {
         confirmText="حذف"
         onConfirm={handleDeleteInvoice}
         variant="destructive"
+      />
+      
+      <ProductSelectionModal 
+        open={selectionOpen} 
+        onOpenChange={setSelectionOpen} 
+        onSelect={handleProductsSelect} 
       />
     </div>
   );

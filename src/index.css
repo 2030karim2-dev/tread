@@ -5,80 +5,90 @@
 
 @layer base {
   :root {
-    --background: 222 20% 96%;
-    --foreground: 222 35% 8%;
-
+    /* ألوان أكثر حيوية ونقاء للتصميمات الحديثة */
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
     --card: 0 0% 100%;
-    --card-foreground: 222 35% 8%;
-
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 35% 8%;
-
-    --primary: 215 100% 50%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 210 40% 96%;
+    --popover-foreground: 222 47% 11%;
+    
+    /* لون أولي نابض بالحياة */
+    --primary: 221 83% 53%; 
+    --primary-foreground: 210 40% 98%;
+    
+    /* لون ثانوي ناعم كبديل */
+    --secondary: 214 32% 91%;
     --secondary-foreground: 222 47% 11%;
-
-    --muted: 210 40% 96%;
+    
+    --muted: 214 32% 91%;
     --muted-foreground: 215 16% 47%;
-
+    
+    /* لون تمييز للزخارف */
     --accent: 210 40% 96%;
     --accent-foreground: 222 47% 11%;
-
+    
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-
+    
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 215 100% 50%;
-
+    --ring: 221 83% 53%;
     --radius: 1rem;
-
-    --success: 162 65% 38%;
-    --warning: 35 95% 52%;
-    --info: 205 85% 50%;
-
-    --sidebar-background: 222 38% 10%;
-    --sidebar-foreground: 222 10% 92%;
-    --sidebar-primary: 35 95% 52%;
+    
+    --success: 142 71% 45%;
+    --warning: 48 96% 53%;
+    --info: 217 91% 60%;
+    
+    /* ألوان الشريط الجانبي الفاتحة */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 221 83% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 30% 16%;
-    --sidebar-accent-foreground: 222 10% 92%;
-    --sidebar-border: 222 30% 16%;
-    --sidebar-ring: 35 95% 52%;
-    --sidebar-muted: 222 20% 22%;
+    --sidebar-accent: 214 32% 91%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214.3 31.8% 91.4%;
+    --sidebar-ring: 221 83% 53%;
+    --sidebar-muted: 214 32% 91%;
   }
 
   .dark {
+    /* وضع ليلي عميق (OLED style) مع لمسات ناعمة */
     --background: 222 47% 5%;
     --foreground: 210 40% 98%;
-    --card: 222 47% 8%;
+    --card: 222 47% 7%;
     --card-foreground: 210 40% 98%;
-    --popover: 222 47% 8%;
+    --popover: 222 47% 7%;
     --popover-foreground: 210 40% 98%;
-    --primary: 210 100% 60%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 215 25% 15%;
+    
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 11%;
+    
+    --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 215 25% 15%;
-    --muted-foreground: 215 16% 65%;
-    --accent: 215 25% 15%;
+    
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    
+    --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
+    
     --destructive: 0 62.8% 40.6%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 215 25% 18%;
-    --input: 215 25% 18%;
-    --ring: 210 100% 60%;
-    --sidebar-background: 222 47% 6%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+    
+    --sidebar-background: 222 47% 5%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 210 100% 60%;
+    --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 25% 15%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
     --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 215 25% 18%;
-    --sidebar-ring: 210 100% 60%;
-    --sidebar-muted: 215 25% 15%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 217 91% 60%;
+    --sidebar-muted: 217.2 32.6% 17.5%;
   }
 }
 
@@ -95,12 +105,13 @@
 
 @layer utilities {
 
-  /* ===== Glass Effects ===== */
+  /* ===== Glass Effects 2.0 ===== */
   .glass-card {
-    @apply bg-card/60 backdrop-blur-xl border border-white/20 dark:border-white/10;
+    @apply bg-card/60 backdrop-blur-xl border border-white/20 dark:border-white/5;
     box-shadow:
-      0 4px 6px -1px hsl(var(--foreground) / 0.05),
-      0 10px 15px -3px hsl(var(--foreground) / 0.05);
+      0 4px 6px -1px hsl(var(--foreground) / 0.03),
+      0 10px 15px -3px hsl(var(--foreground) / 0.03),
+      inset 0 1px 0 0 hsl(var(--foreground) / 0.05); /* إضاءة داخلية علوية */
   }
 
   .glass-card-hover {
@@ -110,12 +121,37 @@
   .glass-card-hover:hover {
     box-shadow:
       0 10px 25px -5px hsl(var(--primary) / 0.15),
-      0 8px 10px -6px hsl(var(--primary) / 0.1);
-    transform: translateY(-3px) scale(1.01);
+      0 8px 10px -6px hsl(var(--primary) / 0.1),
+      inset 0 1px 0 0 hsl(var(--foreground) / 0.05);
+    transform: translateY(-2px) scale(1.005);
+    @apply border-primary/30;
+  }
+
+  /* ===== Magnetic & Glow Buttons ===== */
+  .glow-effect {
+    position: relative;
+    overflow: hidden;
+  }
+  .glow-effect::before {
+    content: '';
+    position: absolute;
+    top: var(--y, 50%);
+    left: var(--x, 50%);
+    width: 250px;
+    height: 250px;
+    background: radial-gradient(circle, hsl(var(--primary) / 0.15) 0%, transparent 70%);
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .glow-effect:hover::before {
+    opacity: 1;
   }
 
   .glass-button {
-    @apply relative overflow-hidden bg-primary/90 hover:bg-primary transition-all duration-300;
+    @apply relative overflow-hidden bg-primary/90 hover:bg-primary transition-all duration-300 shadow-sm hover:shadow-md hover:shadow-primary/25;
   }
   .glass-button::after {
     content: '';
@@ -173,15 +209,15 @@
     -webkit-text-fill-color: transparent;
   }
 
-  /* ===== Spreadsheet ===== */
+  /* ===== Spreadsheet 2.0 (Data Grid) ===== */
   .spreadsheet-cell {
-    @apply border-r border-b border-border px-3 py-2 text-sm;
-    @apply focus-within:outline-none focus-within:ring-2 focus-within:ring-primary/20 focus-within:bg-primary/5;
+    @apply border-r border-b border-border/40 px-3 py-2 text-[13px] transition-colors relative;
+    @apply focus-within:outline-none focus-within:ring-1 focus-within:ring-primary/50 focus-within:bg-primary/5 focus-within:z-10;
   }
 
   .spreadsheet-header {
-    @apply bg-muted/70 font-semibold text-xs uppercase tracking-wider text-muted-foreground;
-    @apply px-3 py-2.5 border-r border-b border-border select-none;
+    @apply bg-muted/30 backdrop-blur-md font-semibold text-[11px] uppercase tracking-wider text-muted-foreground/80;
+    @apply px-3 py-2.5 border-r border-b border-border/60 select-none;
   }
 
   /* ===== Shadows ===== */

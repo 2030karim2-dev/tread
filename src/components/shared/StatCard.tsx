@@ -1,5 +1,7 @@
+import { memo } from 'react';
 import { motion } from 'framer-motion';
 import { LucideIcon, TrendingUp, TrendingDown } from 'lucide-react';
+import { GlowCard } from './AnimatedWrappers';
 
 interface StatCardProps {
   title: string;
@@ -20,12 +22,12 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
   const range = max - min || 1;
   const width = 100;
   const height = 30;
-  
+
   const points = data.map((val, i) => ({
     x: (i / (data.length - 1)) * width,
     y: height - ((val - min) / range) * height
   }));
-  
+
   const path = `M ${points.map(p => `${p.x},${p.y}`).join(' L ')}`;
 
   return (
@@ -78,7 +80,7 @@ const variantConfig = {
   },
 };
 
-export function StatCard({ title, value, icon: Icon, trend, trendUp, variant = 'default', delay = 0, sparklineData }: StatCardProps) {
+export const StatCard = memo(function StatCard({ title, value, icon: Icon, trend, trendUp, variant = 'default', delay = 0, sparklineData }: StatCardProps) {
   const config = variantConfig[variant];
 
   return (
@@ -86,35 +88,36 @@ export function StatCard({ title, value, icon: Icon, trend, trendUp, variant = '
       initial={{ opacity: 0, y: 20, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ delay, duration: 0.4, ease: 'easeOut' }}
-      className={`rounded-xl sm:rounded-2xl p-2.5 sm:p-4 lg:p-5 relative ${config.card}`}
+      className="h-full"
     >
-      <div className="flex items-start justify-between mb-1.5 sm:mb-3">
-        <span className={`text-[10px] sm:text-xs lg:text-sm font-medium ${config.sub} leading-tight`}>
-          {title}
-        </span>
-        <div className={`p-1 sm:p-2 lg:p-2.5 rounded-lg sm:rounded-xl ${config.icon}`}>
-          <Icon className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5" />
+      <GlowCard className={`rounded-xl sm:rounded-2xl p-2.5 sm:p-4 lg:p-5 relative h-full flex flex-col justify-between ${config.card}`}>
+        <div className="flex items-start justify-between mb-1.5 sm:mb-3">
+          <span className={`text-[10px] sm:text-xs lg:text-sm font-medium ${config.sub} leading-tight`}>
+            {title}
+          </span>
+          <div className={`p-1 sm:p-2 lg:p-2.5 rounded-lg sm:rounded-xl z-20 ${config.icon}`}>
+            <Icon className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5" />
+          </div>
         </div>
-      </div>
-      
-      <div className="flex items-end justify-between gap-2">
-        <div>
-          <div className={`text-base sm:text-xl lg:text-2xl font-extrabold ${config.text} tracking-tight`}>{value}</div>
-          {trend && (
-            <div className={`flex items-center gap-1 mt-1 sm:mt-2 ${trendUp ? 'text-success' : 'text-destructive'}`}>
-              {trendUp ? <TrendingUp className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> : <TrendingDown className="w-2.5 h-2.5 sm:w-3 sm:h-3" />}
-              <span className="text-[9px] sm:text-[11px] font-semibold">{trend}</span>
+
+        <div className="flex items-end justify-between gap-2 mt-auto">
+          <div className="z-20">
+            <div className={`text-base sm:text-xl lg:text-2xl font-extrabold ${config.text} tracking-tight`}>{value}</div>
+            {trend && (
+              <div className={`flex items-center gap-1 mt-1 sm:mt-2 ${trendUp ? 'text-success' : 'text-destructive'}`}>
+                {trendUp ? <TrendingUp className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> : <TrendingDown className="w-2.5 h-2.5 sm:w-3 sm:h-3" />}
+                <span className="text-[9px] sm:text-[11px] font-semibold">{trend}</span>
+              </div>
+            )}
+          </div>
+
+          {sparklineData && (
+            <div className="mb-1 pointer-events-none z-10 opacity-80">
+              <Sparkline data={sparklineData} color={config.sparkline} />
             </div>
           )}
         </div>
-        
-        {sparklineData && (
-          <div className="mb-1">
-            <Sparkline data={sparklineData} color={config.sparkline} />
-          </div>
-        )}
-      </div>
+      </GlowCard>
     </motion.div>
   );
-}
-
+});

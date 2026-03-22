@@ -25,9 +25,12 @@ const SalesPage = lazy(() => import("./pages/SalesPage"));
 const ExpensesPage = lazy(() => import("./pages/ExpensesPage"));
 const CurrencyPage = lazy(() => import("./pages/CurrencyPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const ReportsPage = lazy(() => import("./pages/ReportsPage"));
 const PhrasesPage = lazy(() => import("./pages/PhrasesPage"));
 const NotesPage = lazy(() => import("./pages/NotesPage"));
 const CustomersPage = lazy(() => import("./pages/CustomersPage"));
+const BuyingListPage = lazy(() => import("./pages/BuyingListPage"));
+const SettlementPage = lazy(() => import("./pages/SettlementPage"));
 
 import { ThemeSync } from "@/components/layout/ThemeSync";
 
@@ -74,9 +77,12 @@ const App = () => (
                   <Route path="/expenses" element={<ExpensesPage />} />
                   <Route path="/customers" element={<CustomersPage />} />
                   <Route path="/currency" element={<CurrencyPage />} />
+                  <Route path="/reports" element={<ReportsPage />} />
                   <Route path="/settings" element={<SettingsPage />} />
                   <Route path="/phrases" element={<PhrasesPage />} />
                   <Route path="/notes" element={<NotesPage />} />
+                  <Route path="/buying-list" element={<BuyingListPage />} />
+                  <Route path="/settlements" element={<SettlementPage />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>

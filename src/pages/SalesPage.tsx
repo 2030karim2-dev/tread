@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, FileText, Printer, Trash2 } from 'lucide-react';
-import { PageHeader, EditableTable, ConfirmDialog } from '@/components/shared';
+import { Plus, FileText, Printer, Trash2, Package } from 'lucide-react';
+import { PageHeader, EditableTable, ConfirmDialog, ProductSelectionModal } from '@/components/shared';
 import type { ColumnDef } from '@/components/shared';
 import { formatNumber, generateId } from '@/lib/helpers';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ export default function SalesPage() {
 
   const [activeId, setActiveId] = useState(invoices[0]?.id || '');
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [selectionOpen, setSelectionOpen] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
   const activeInvoice = invoices.find(inv => inv.id === activeId) || invoices[0];
@@ -27,7 +28,9 @@ export default function SalesPage() {
     const newInv: Omit<StoreSalesInvoice, 'id'> = {
       number: `SALE-2025-${String(num).padStart(3, '0')}`,
       customer_id: '', customer_name: 'عميل جديد',
-      date: new Date().toISOString().split('T')[0],
+      date: new Date().toISOString().split('T')[0] ?? '',
+      currency: 'SAR',
+      amount_paid: 0,
       items: [],
     };
     addSalesInvoice(newInv);
@@ -75,6 +78,21 @@ export default function SalesPage() {
     updateSalesInvoice(activeInvoice.id, { items: activeInvoice.items.filter(i => i.id !== itemId) });
   };
 
+  const handleProductsSelect = useCallback((selectedProducts: any[]) => {
+    if (!activeInvoice) return;
+    const newItems: StoreSalesInvoiceItem[] = selectedProducts.map(p => ({
+      id: generateId(),
+      product_name: p.name,
+      oem_number: p.oem_number || '',
+      brand: p.brand || '',
+      quantity: 1,
+      sale_price: p.sale_price || 0,
+      size: p.size || '',
+    }));
+    updateSalesInvoice(activeInvoice.id, { items: [...activeInvoice.items, ...newItems] });
+    toast({ title: 'تمت الإضافة', description: `تم إضافة ${selectedProducts.length} منتج للفاتورة` });
+  }, [activeInvoice, updateSalesInvoice]);
+
   const handleDeleteInvoice = () => {
     if (deleteId) {
       deleteSalesInvoice(deleteId);
@@ -103,14 +121,33 @@ export default function SalesPage() {
     { key: 'quantity', header: 'الكمية', minWidth: '60px', type: 'number', align: 'center' },
     { key: 'sale_price', header: 'سعر البيع', minWidth: '80px', type: 'number', align: 'center' },
     { key: 'size', header: 'المقاس', minWidth: '70px' },
-    { key: 'total', header: 'الإجمالي', minWidth: '80px', editable: false, align: 'center', render: (row) => <span className="font-semibold">${formatNumber(row.quantity * row.sale_price)}</span> },
+    { key: 'total' as any, header: 'الإجمالي', minWidth: '80px', editable: false, align: 'center', render: (row) => <span className="font-semibold">{formatNumber(row.quantity * row.sale_price)} <span className="text-[10px]">{activeInvoice.currency}</span></span> },
   ];
 
   const footer = (
-    <tr className="bg-muted/50 font-bold">
-      <td colSpan={7} className="spreadsheet-cell text-sm">الإجمالي</td>
-      <td className="spreadsheet-cell text-center text-sm">${formatNumber(total)}</td>
-    </tr>
+    <>
+      <tr className="bg-muted/50 font-bold border-t-2 border-primary/20">
+        <td colSpan={7} className="spreadsheet-cell text-sm">إجمالي الفاتورة</td>
+        <td className="spreadsheet-cell text-center text-sm">{formatNumber(total)} <span className="text-[10px]">{activeInvoice.currency}</span></td>
+      </tr>
+      <tr className="bg-green-500/5 font-bold">
+        <td colSpan={7} className="spreadsheet-cell text-sm text-green-600 italic">المبلغ المستلم</td>
+        <td className="spreadsheet-cell p-0">
+          <input 
+            type="number" 
+            value={activeInvoice.amount_paid} 
+            onChange={e => updateSalesInvoice(activeInvoice.id, { amount_paid: Number(e.target.value) })}
+            className="w-full h-full bg-transparent border-none text-center text-sm text-green-700 focus:ring-1 ring-green-500 outline-none font-black"
+          />
+        </td>
+      </tr>
+      <tr className="bg-orange-500/10 font-bold">
+        <td colSpan={7} className="spreadsheet-cell text-sm text-orange-600 italic">المبلغ المتبقي (Debt)</td>
+        <td className="spreadsheet-cell text-center text-sm text-orange-700 font-black">
+          {formatNumber(Math.max(0, total - activeInvoice.amount_paid))} <span className="text-[10px]">{activeInvoice.currency}</span>
+        </td>
+      </tr>
+    </>
   );
 
   return (
@@ -120,8 +157,11 @@ export default function SalesPage() {
           <Button onClick={handlePrint} variant="outline" className="gap-2">
             <Printer className="w-4 h-4" /> طباعة
           </Button>
+          <Button onClick={() => setSelectionOpen(true)} variant="outline" className="gap-2 font-bold border-primary/20 hover:bg-primary/5">
+            <Package className="w-4 h-4 text-primary" /> اختر من الكتالوج
+          </Button>
           <Button onClick={addRow} className="gradient-primary text-primary-foreground gap-2">
-            <Plus className="w-4 h-4" /> إضافة صف
+            <Plus className="w-4 h-4" /> إضافة سطر فارغ
           </Button>
         </div>
       </PageHeader>
@@ -201,7 +241,19 @@ export default function SalesPage() {
                   ))}
                 </select>
               </div>
-              <div>
+              <div className="col-span-1">
+                <label className="text-muted-foreground text-[10px]">العملة</label>
+                <select
+                  value={activeInvoice.currency}
+                  onChange={e => updateSalesInvoice(activeInvoice.id, { currency: e.target.value })}
+                  className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs font-bold"
+                >
+                  <option value="USD">USD - دولار 🇺🇸</option>
+                  <option value="SAR">SAR - ريال 🇸🇦</option>
+                  <option value="CNY">CNY - ين ريمبامبي 🇨🇳</option>
+                </select>
+              </div>
+              <div className="col-span-1">
                 <label className="text-muted-foreground text-[10px]">التاريخ</label>
                 <input
                   type="date"
@@ -237,6 +289,12 @@ export default function SalesPage() {
         confirmText="حذف"
         onConfirm={handleDeleteInvoice}
         variant="destructive"
+      />
+
+      <ProductSelectionModal 
+        open={selectionOpen} 
+        onOpenChange={setSelectionOpen} 
+        onSelect={handleProductsSelect} 
       />
     </div>
   );

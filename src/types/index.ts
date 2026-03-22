@@ -25,12 +25,17 @@ export type Shipment    = z.infer<typeof shipmentSchema> & { id: string };
 export type Product = z.infer<typeof productSchema> & { id: string };
 
 // ===== Quotation (no full Zod schema yet — inline type) =====
+export type QuotationStatus = 'pending_sourcing' | 'priced' | 'sent_to_customer' | 'approved' | 'rejected';
+
 export interface QuotationItem {
   id: string;
   product_name: string;
+  product_name_en?: string;
+  product_name_zh?: string;
   oem_number: string;
   brand: string;
   quantity: number;
+  cost_rmb?: number;
   purchase_price: number;
   size: string;
   notes: string;
@@ -38,9 +43,17 @@ export interface QuotationItem {
 
 export interface Quotation {
   id: string;
+  number: string;
+  type?: 'incoming' | 'outgoing'; 
+  customer_name?: string;
+  status?: QuotationStatus;
+  margin_percentage?: number;
+  shipping_cbm_cost?: number;
   supplier_id: string;
   trip_id: string;
   date: string;
+  currency?: string;
+  amount_paid?: number;
   notes: string;
   items: QuotationItem[];
 }
@@ -60,10 +73,15 @@ export interface PurchaseInvoiceItem {
 
 export interface PurchaseInvoice {
   id: string;
+  number: string;
   supplier_id: string;
+  supplier_name: string;
   trip_id: string;
+  trip_name: string;
+  shipment_id?: string;
   date: string;
   currency: string;
+  amount_paid: number;
   notes: string;
   items: PurchaseInvoiceItem[];
 }
@@ -86,6 +104,7 @@ export interface SalesInvoice {
   customer_name: string;
   date: string;
   currency: string;
+  amount_paid: number;
   notes: string;
   items: SalesInvoiceItem[];
 }
@@ -101,6 +120,10 @@ export interface InventoryItem {
   quantity_available: number;
   purchase_price: number;
   sale_price: number;
+  oem_alternatives?: string;
+  vehicle_compatibility?: string;
+  specifications?: string;
+  unit?: string;
 }
 
 // ===== Settings =====

@@ -72,33 +72,23 @@ export const tripSchema = z.object({
 
 // Supplier schema محسّن
 export const supplierSchema = z.object({
-    name: z.string()
-        .trim()
-        .min(1, 'اسم المورد مطلوب')
-        .max(100),
-    company_name: z.string()
-        .trim()
-        .min(1, 'اسم الشركة مطلوب')
-        .max(100),
-    city: z.string()
-        .trim()
-        .min(1, 'المدينة مطلوبة'),
-    phone: z.string()
-        .trim()
-        .min(1, 'رقم الهاتف مطلوب'),
-    wechat_or_whatsapp: z.string()
-        .max(100)
-        .optional()
-        .default(''),
-    product_category: z.string()
-        .trim()
-        .min(1, 'تصنيف المنتج مطلوب'),
-    notes: z.string()
-        .max(500)
-        .optional()
-        .default(''),
+    name: z.string().trim().min(1, 'اسم المورد مطلوب').max(100),
+    company_name: z.string().trim().min(1, 'اسم الشركة مطلوب').max(100),
+    city: z.string().trim().min(1, 'المدينة مطلوبة'),
+    phone: z.string().trim().min(1, 'رقم الهاتف مطلوب'),
+    whatsapp: z.string().max(100).optional().default(''),
+    wechat: z.string().max(100).optional().default(''),
+    website: z.string().url('رابط الموقع غير صحيح').or(z.literal('')).optional().default(''),
+    facebook: z.string().url('رابط فيس بوك غير صحيح').or(z.literal('')).optional().default(''),
+    google_maps: z.string().url('رابط خرائط جوجل غير صحيح').or(z.literal('')).optional().default(''),
+    china_maps: z.string().url('رابط خرائط الصين غير صحيح').or(z.literal('')).optional().default(''),
+    product_category: z.string().trim().min(1, 'تصنيف المنتج مطلوب'),
+    notes: z.string().max(500).optional().default(''),
     rating: z.number().min(0).max(5).optional(),
-    trip_id: z.string().optional(),
+    factory_grade: z.enum(['A', 'B', 'C']).optional().default('A'),
+    moq: z.string().max(100).optional().default(''),
+    lead_time_days: z.number().min(0).optional().default(15),
+    trip_id: z.string().min(1, 'الرحلة مطلوبة'),
 });
 
 // Expense schema محسّن
@@ -127,8 +117,18 @@ export const expenseSchema = z.object({
 export const productSchema = z.object({
     name: z.string()
         .trim()
-        .min(1, 'اسم المنتج مطلوب')
+        .min(1, 'اسم المنتج (عربي) مطلوب')
         .max(100),
+    name_en: z.string()
+        .trim()
+        .max(100)
+        .optional()
+        .default(''),
+    name_zh: z.string()
+        .trim()
+        .max(100)
+        .optional()
+        .default(''),
     oem_number: z.string()
         .trim()
         .max(50)
@@ -144,8 +144,12 @@ export const productSchema = z.object({
         .max(30)
         .optional()
         .default(''),
+    cost_rmb: z.number()
+        .nonnegative('التكلفة باليوان يجب أن تكون موجبة')
+        .optional()
+        .default(0),
     purchase_price: z.number()
-        .nonnegative('سعر الشراء يجب أن يكون أكبر من أو يساوي صفر'),
+        .nonnegative('سعر الشراء (واصل) يجب أن يكون أكبر من أو يساوي صفر'),
     sale_price: z.number()
         .nonnegative('سعر البيع يجب أن يكون أكبر من أو يساوي صفر'),
     quantity: z.number()
@@ -157,6 +161,10 @@ export const productSchema = z.object({
         .default(''),
     rating: z.number().min(0).max(5).optional(),
     image_url: z.string().url().optional(),
+    oem_alternatives: z.string().max(200).optional().default(''),
+    vehicle_compatibility: z.string().max(300).optional().default(''),
+    specifications: z.string().max(1000).optional().default(''),
+    unit: z.string().optional().default('قطعة'),
 });
 
 // Shipment schema
@@ -185,8 +193,12 @@ export const shipmentSchema = z.object({
     cartons_count: z.number()
         .int()
         .nonnegative('عدد الكراتين يجب أن يكون أكبر من أو يساوي صفر'),
+    cbm: z.number()
+        .nonnegative('الحجم (CBM) يجب أن يكون أكبر من أو يساوي صفر'),
+    container_type: z.enum(['20ft', '40ft', '40HQ', 'LCL']),
     status: z.enum([
         'purchased',
+        'production',
         'at_warehouse',
         'shipped',
         'in_transit',
@@ -201,6 +213,12 @@ export const customerSchema = z.object({
     company_name: z.string().max(100).optional().default(''),
     city: z.string().trim().min(1, 'المدينة مطلوبة'),
     phone: z.string().trim().min(1, 'رقم الهاتف مطلوب'),
+    whatsapp: z.string().max(100).optional().default(''),
+    wechat: z.string().max(100).optional().default(''),
+    website: z.string().url('رابط الموقع غير صحيح').or(z.literal('')).optional().default(''),
+    facebook: z.string().url('رابط فيس بوك غير صحيح').or(z.literal('')).optional().default(''),
+    google_maps: z.string().url('رابط خرائط جوجل غير صحيح').or(z.literal('')).optional().default(''),
+    china_maps: z.string().url('رابط خرائط الصين غير صحيح').or(z.literal('')).optional().default(''),
     notes: z.string().max(500).optional().default(''),
 });
 

@@ -6,11 +6,18 @@ export const STATUS_LABELS: Record<string, string> = {
   active: 'جارية',
   completed: 'مكتملة',
   purchased: 'تم الشراء',
+  production: 'قيد التصنيع',
   at_warehouse: 'في المستودع',
   shipped: 'تم الشحن',
   in_transit: 'في الطريق',
   arrived: 'وصل الميناء',
   delivered: 'تم التسليم',
+  // Quotation Statuses (Sourcing Pipeline)
+  pending_sourcing: 'قيد البحث والتسعير',
+  priced: 'تَسَعَّر للمورد',
+  sent_to_customer: 'أُرسل للعميل',
+  approved: 'مقبول ومُعْتَمَد',
+  rejected: 'مرفوض',
 };
 
 export const STATUS_STYLES: Record<string, string> = {
@@ -18,11 +25,18 @@ export const STATUS_STYLES: Record<string, string> = {
   active: 'bg-success/15 text-success border-success/30',
   completed: 'bg-muted text-muted-foreground border-border',
   purchased: 'bg-info/15 text-info border-info/30',
+  production: 'bg-purple-500/15 text-purple-600 border-purple-500/30',
   at_warehouse: 'bg-warning/15 text-warning border-warning/30',
   shipped: 'bg-primary/15 text-primary border-primary/30',
   in_transit: 'bg-secondary/15 text-secondary border-secondary/30',
   arrived: 'bg-success/15 text-success border-success/30',
   delivered: 'bg-accent/15 text-accent border-accent/30',
+  // Quotation Statuses
+  pending_sourcing: 'bg-muted text-muted-foreground border-border',
+  priced: 'bg-info/15 text-info border-info/30',
+  sent_to_customer: 'bg-primary/15 text-primary border-primary/30',
+  approved: 'bg-success/15 text-success border-success/30',
+  rejected: 'bg-destructive/15 text-destructive border-destructive/30',
 };
 
 // ===== Expense Categories =====
@@ -48,6 +62,13 @@ export type CurrencyCode = typeof CURRENCIES[number]['code'];
 export const SHIPPING_TYPES = [
   { value: 'sea', label: 'بحري', icon: Ship },
   { value: 'air', label: 'جوي', icon: Plane },
+] as const;
+
+export const CONTAINER_TYPES = [
+  { value: '20ft', label: 'حاوية 20 قدم', capacity: 28 },
+  { value: '40ft', label: 'حاوية 40 قدم', capacity: 58 },
+  { value: '40HQ', label: 'حاوية 40 متميزة (HQ)', capacity: 68 },
+  { value: 'LCL', label: 'شحن جزئي (LCL)', capacity: 0 },
 ] as const;
 
 // ===== Empty States =====

@@ -5,6 +5,7 @@
 
 import { CurrencyCode } from '@/constants';
 import { useAppStore } from '@/store/useAppStore';
+import { CurrencyRates } from '@/types';
 
 // أسعار الصرف الافتراضية (تُستخدم كقيم احتياطية)
 const DEFAULT_RATES: Record<string, number> = {
@@ -22,8 +23,13 @@ const DEFAULT_RATES: Record<string, number> = {
 function getCurrentRates(): Record<string, number> {
   try {
     const storeRates = useAppStore.getState().currencyRates;
+    if (!storeRates || typeof storeRates !== 'object') {
+      console.warn('Invalid currency rates from store, using defaults');
+      return DEFAULT_RATES;
+    }
     return storeRates as unknown as Record<string, number>;
-  } catch {
+  } catch (error) {
+    console.error('Error getting currency rates from store:', error);
     return DEFAULT_RATES;
   }
 }
@@ -38,7 +44,12 @@ function getExchangeRate(from: CurrencyCode, to: CurrencyCode): number | null {
   const key = `${from}_${to}`;
   const rate = rates[key];
 
-  return rate ?? DEFAULT_RATES[key] ?? null;
+  if (rate === undefined) {
+    console.warn(`Exchange rate not found for ${from} to ${to}, checking defaults`);
+    return DEFAULT_RATES[key] ?? null;
+  }
+
+  return rate;
 }
 
 /**
@@ -76,13 +87,18 @@ export function convertCurrency(
     throw new CurrencyError('المبلغ يجب أن يكون رقماً صالحاً', 'INVALID_AMOUNT');
   }
 
-  if (amount < 0) {
-    throw new CurrencyError('المبلغ يجب أن يكون أكبر من صفر', 'INVALID_AMOUNT');
-  }
-
   // نفس العملة
   if (from === to) {
     return amount;
+  }
+
+  // التحقق من صحة العملات
+  if (!isValidCurrency(from)) {
+    throw new CurrencyError(`العملة المصدر غير صالحة: ${from}`, 'INVALID_CURRENCY');
+  }
+
+  if (!isValidCurrency(to)) {
+    throw new CurrencyError(`العملة الهدف غير صالحة: ${to}`, 'INVALID_CURRENCY');
   }
 
   // الحصول على سعر الصرف

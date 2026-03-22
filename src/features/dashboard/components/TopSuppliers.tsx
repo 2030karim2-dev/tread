@@ -1,20 +1,13 @@
 import { motion } from 'framer-motion';
 import { Users } from 'lucide-react';
-import { StarRating } from '@/components/shared';
-
-interface Supplier {
-    id: string;
-    name: string;
-    company_name: string;
-    rating: number;
-}
+import { Supplier } from '@/types';
 
 interface TopSuppliersProps {
     suppliers: Supplier[];
 }
 
 export function TopSuppliers({ suppliers }: TopSuppliersProps) {
-    const sortedSuppliers = [...suppliers].sort((a, b) => b.rating - a.rating);
+    const sortedSuppliers = [...suppliers].sort((a, b) => (b.rating || 0) - (a.rating || 0));
 
     return (
         <motion.div

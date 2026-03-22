@@ -18,6 +18,8 @@ import {
     BookOpen,
     StickyNote,
     Building2,
+    Settings,
+    FileBarChart,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -54,9 +56,10 @@ export const NAV_GROUPS: NavGroup[] = [
         label: 'المشتريات',
         items: [
             { path: '/suppliers', label: 'الموردين', icon: Users },
-            { path: '/products', label: 'المنتجات', icon: Package },
+            { path: '/products', label: 'دليل المنتجات', icon: Package },
+            { path: '/buying-list', label: 'قائمة مشتريات الرحلة', icon: ShoppingCart },
             { path: '/quotations', label: 'عروض الأسعار', icon: FileText },
-            { path: '/purchases', label: 'فواتير الشراء', icon: ShoppingCart },
+            { path: '/purchases', label: 'فواتير الشراء', icon: Receipt },
         ],
     },
     {
@@ -74,6 +77,12 @@ export const NAV_GROUPS: NavGroup[] = [
             { path: '/currency', label: 'محول العملات', icon: RefreshCw },
             { path: '/phrases', label: 'دليل المفاوضة', icon: BookOpen },
             { path: '/notes', label: 'الملاحظات', icon: StickyNote },
+        ],
+    },
+    {
+        label: 'التقارير الإدارية',
+        items: [
+            { path: '/reports', label: 'مركز التقارير', icon: FileBarChart },
             { path: '/settings', label: 'الإعدادات', icon: Settings },
         ],
     },
@@ -88,11 +97,11 @@ export const ALL_NAV_ITEMS = NAV_GROUPS.flatMap(g => g.items);
  * عناصر التنقل للـ Bottom Navigation (الموبايل)
  */
 export const BOTTOM_NAV_ITEMS: NavItem[] = [
-    NAV_GROUPS[0]!.items[0]!,
-    NAV_GROUPS[1]!.items[0]!,
-    NAV_GROUPS[1]!.items[1]!,
-    NAV_GROUPS[2]!.items[0]!,
-    NAV_GROUPS[2]!.items[1]!,
+    NAV_GROUPS[0]!.items[0]!, // Dashboard
+    NAV_GROUPS[1]!.items[1]!, // Products
+    NAV_GROUPS[1]!.items[2]!, // Buying List
+    NAV_GROUPS[2]!.items[0]!, // Shipping
+    NAV_GROUPS[3]!.items[1]!, // Expenses (Group indices changed because I added a group?)
 ];
 
 /**

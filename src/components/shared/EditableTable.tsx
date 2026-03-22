@@ -1,4 +1,4 @@
-import { ReactNode, useCallback, useRef } from 'react';
+import { ReactNode, useCallback, useRef, useState, useEffect } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { motion } from 'framer-motion';
 import { Trash2 } from 'lucide-react';
@@ -42,6 +42,44 @@ export function EditableTable<T extends { id: string }>({
   // refs الخلايا للتنقل بالأسهم
   const inputRefs = useRef<(HTMLInputElement | null)[][]>([]);
 
+  // Load saved widths from localStorage
+  const [colWidths, setColWidths] = useState<Record<string, number>>(() => {
+    try {
+        const saved = localStorage.getItem('table_col_widths');
+        return saved ? JSON.parse(saved) : {};
+    } catch { return {}; }
+  });
+
+  const resizingRef = useRef<{ key: string; startX: number; startWidth: number } | null>(null);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!resizingRef.current) return;
+      const { key, startX, startWidth } = resizingRef.current;
+      const delta = e.clientX - startX;
+      const newWidth = Math.max(60, startWidth + delta);
+      
+      setColWidths(prev => ({ ...prev, [key]: newWidth }));
+    };
+
+    const handleMouseUp = () => {
+      if (resizingRef.current) {
+          localStorage.setItem('table_col_widths', JSON.stringify(colWidths));
+      }
+      resizingRef.current = null;
+      document.body.style.cursor = 'default';
+      document.body.style.userSelect = 'auto';
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [colWidths]);
+
   const editableCols = columns.filter(c => c.editable !== false && !c.render);
   const totalCols = editableCols.length;
 
@@ -83,7 +121,7 @@ export function EditableTable<T extends { id: string }>({
     if (!inputRefs.current[rowIdx]) inputRefs.current[rowIdx] = [];
     let editableColIdx = 0;
     return (
-      <tr key={row.id} className="group hover:bg-muted/30 transition-colors" style={{ height: ROW_HEIGHT }}>
+      <tr key={row.id} className="group hover:bg-muted/40 transition-colors" style={{ height: ROW_HEIGHT }}>
         {showRowNumbers && (
           <td className="spreadsheet-cell text-center text-muted-foreground font-mono text-xs w-10">
             {rowIdx + 1}
@@ -139,16 +177,35 @@ export function EditableTable<T extends { id: string }>({
       ref={scrollRef}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="bg-card rounded-xl border border-border shadow-sm overflow-x-auto touch-pan-x"
+      className="bg-card/40 backdrop-blur-xl rounded-xl border border-border/50 shadow-card overflow-x-auto touch-pan-x custom-scrollbar"
       style={shouldVirtualize ? { maxHeight: '60vh', overflowY: 'auto' } : {}}
     >
       <table className="w-full" style={{ minWidth: '700px' }}>
-        <thead className="sticky top-0 z-10 bg-card">
+        <thead className="sticky top-0 z-20 bg-card/80 backdrop-blur-md">
           <tr>
             {showRowNumbers && <th className="spreadsheet-header w-10">#</th>}
             {columns.map(col => (
-              <th key={col.key} className="spreadsheet-header" style={{ minWidth: col.minWidth }}>
-                {col.header}
+              <th 
+                key={col.key} 
+                className="spreadsheet-header relative group/resizer" 
+                style={{ width: colWidths[col.key] || col.minWidth || 'auto', minWidth: colWidths[col.key] || col.minWidth }}
+              >
+                <div className="truncate px-2">{col.header}</div>
+                <div 
+                  onMouseDown={(e) => {
+                    const el = e.currentTarget.parentElement;
+                    if (!el) return;
+                    resizingRef.current = {
+                      key: col.key,
+                      startX: e.clientX,
+                      startWidth: el.offsetWidth
+                    };
+                    document.body.style.cursor = 'col-resize';
+                    document.body.style.userSelect = 'none';
+                    e.preventDefault();
+                  }}
+                  className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-primary/50 border-r border-primary/20 opacity-0 group-hover/resizer:opacity-100 transition-opacity z-30"
+                />
               </th>
             ))}
             {onDeleteRow && <th className="spreadsheet-header w-10" />}

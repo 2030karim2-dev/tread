@@ -2,13 +2,7 @@ import { motion } from 'framer-motion';
 import { Plane } from 'lucide-react';
 import { StatusBadge } from '@/components/shared';
 
-interface Trip {
-    id: string;
-    name: string;
-    city: string;
-    start_date: string;
-    status: string;
-}
+import { Trip } from '@/types';
 
 interface ActiveTripsProps {
     trips: Trip[];
@@ -38,7 +32,7 @@ export function ActiveTrips({ trips }: ActiveTripsProps) {
                             <p className="font-bold text-[11px] sm:text-sm leading-none">{trip.name}</p>
                             <p className="text-[9px] sm:text-xs text-muted-foreground mt-1">{trip.city}</p>
                         </div>
-                        <StatusBadge status={trip.status} />
+                        <StatusBadge status={trip.status || 'planning'} />
                     </div>
                 ))}
             </div>

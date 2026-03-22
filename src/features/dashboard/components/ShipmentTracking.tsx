@@ -1,16 +1,7 @@
 import { motion } from 'framer-motion';
 import { Ship } from 'lucide-react';
 import { StatusBadge } from '@/components/shared';
-
-interface Shipment {
-    id: string;
-    shipment_number: string;
-    status: string;
-    departure_port: string;
-    arrival_port: string;
-    shipping_company: string;
-    cartons_count: number;
-}
+import { Shipment } from '@/types';
 
 interface ShipmentTrackingProps {
     shipments: Shipment[];
@@ -35,7 +26,7 @@ export function ShipmentTracking({ shipments }: ShipmentTrackingProps) {
                     <div key={shipment.id} className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-muted/40">
                         <div className="flex items-center justify-between mb-1.5">
                             <p className="font-bold text-[11px] sm:text-sm truncate mr-1">{shipment.shipment_number}</p>
-                            <StatusBadge status={shipment.status} />
+                            <StatusBadge status={shipment.status || 'purchased'} />
                         </div>
                         <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-muted-foreground">
                             <span className="truncate">{shipment.departure_port}</span>
@@ -50,4 +41,3 @@ export function ShipmentTracking({ shipments }: ShipmentTrackingProps) {
         </motion.div>
     );
 }
-

@@ -10,6 +10,7 @@ import { createTripsSlice, type TripsSlice } from './slices/tripsSlice';
 import { createSuppliersSlice, type SuppliersSlice } from './slices/suppliersSlice';
 import { createProductsSlice, type ProductsSlice } from './slices/productsSlice';
 import { createExpensesSlice, type ExpensesSlice } from './slices/expensesSlice';
+import { createBuyingListSlice, type BuyingListSlice, BuyingItem } from './slices/buyingListSlice';
 
 // ===== Purchase Invoice (local to store) =====
 export interface StorePurchaseInvoiceItem {
@@ -30,7 +31,10 @@ export interface StorePurchaseInvoice {
   supplier_name: string;
   trip_id: string;
   trip_name: string;
+  shipment_id?: string;
   date: string;
+  currency: string;
+  amount_paid: number;
   items: StorePurchaseInvoiceItem[];
 }
 
@@ -51,7 +55,23 @@ export interface StoreSalesInvoice {
   customer_id: string;
   customer_name: string;
   date: string;
+  currency: string;
+  amount_paid: number;
   items: StoreSalesInvoiceItem[];
+}
+
+// ===== Voucher (Standalone Payments/Receipts) =====
+export interface Voucher {
+  id: string;
+  number: string;
+  date: string;
+  party_id: string;
+  party_name: string;
+  party_type: 'supplier' | 'customer';
+  type: 'receipt' | 'payment'; // receipt = سند قبض (customer), payment = سند دفع (supplier)
+  amount: number;
+  currency: string;
+  notes: string;
 }
 
 // ===== Default data =====
@@ -59,6 +79,7 @@ const defaultPurchaseInvoices: StorePurchaseInvoice[] = [
   {
     id: '1', number: 'INV-2025-001', supplier_id: '1', supplier_name: 'Guangzhou Auto Parts Co.',
     trip_id: '1', trip_name: 'قوانغتشو يناير 2025', date: '2025-01-20',
+    currency: 'USD', amount_paid: 4000,
     items: [
       { id: '1', product_name: 'فلتر زيت تويوتا', oem_number: '04152-YZZA1', brand: 'Toyota', quantity: 500, purchase_price: 8, sale_price: 15, size: 'قياسي' },
       { id: '2', product_name: 'فلتر هواء كامري', oem_number: '17801-0H050', brand: 'Toyota', quantity: 300, purchase_price: 12, sale_price: 25, size: 'كبير' },
@@ -68,6 +89,7 @@ const defaultPurchaseInvoices: StorePurchaseInvoice[] = [
   {
     id: '2', number: 'INV-2025-002', supplier_id: '3', supplier_name: 'Shanghai Brake Systems',
     trip_id: '1', trip_name: 'قوانغتشو يناير 2025', date: '2025-01-22',
+    currency: 'USD', amount_paid: 5000,
     items: [
       { id: '4', product_name: 'شمعات إشعال', oem_number: '90919-01253', brand: 'Denso', quantity: 1000, purchase_price: 5, sale_price: 12, size: 'قياسي' },
       { id: '5', product_name: 'سير مكيف', oem_number: '99332-10960', brand: 'Gates', quantity: 150, purchase_price: 10, sale_price: 22, size: '6PK1060' },
@@ -78,6 +100,7 @@ const defaultPurchaseInvoices: StorePurchaseInvoice[] = [
 const defaultSalesInvoices: StoreSalesInvoice[] = [
   {
     id: '1', number: 'SALE-2025-001', customer_id: '1', customer_name: 'أحمد محمد', date: '2025-03-01',
+    currency: 'SAR', amount_paid: 2000,
     items: [
       { id: '1', product_name: 'فلتر زيت تويوتا', oem_number: '04152-YZZA1', brand: 'Toyota', quantity: 100, sale_price: 15, size: 'قياسي' },
       { id: '2', product_name: 'تيل فرامل أمامي', oem_number: '04465-33471', brand: 'Toyota', quantity: 30, sale_price: 35, size: 'أمامي' },
@@ -85,6 +108,7 @@ const defaultSalesInvoices: StoreSalesInvoice[] = [
   },
   {
     id: '2', number: 'SALE-2025-002', customer_id: '2', customer_name: 'محمد علي', date: '2025-03-05',
+    currency: 'SAR', amount_paid: 1000,
     items: [
       { id: '3', product_name: 'شمعات إشعال', oem_number: '90919-01253', brand: 'Denso', quantity: 200, sale_price: 12, size: 'قياسي' },
       { id: '4', product_name: 'فلتر هواء كامري', oem_number: '17801-0H050', brand: 'Toyota', quantity: 50, sale_price: 25, size: 'كبير' },
@@ -131,6 +155,7 @@ interface CoreState {
   quotations: Quotation[];
   purchaseInvoices: StorePurchaseInvoice[];
   salesInvoices: StoreSalesInvoice[];
+  vouchers: Voucher[];
   companySettings: CompanySettings;
   currencyRates: CurrencyRates;
 
@@ -160,10 +185,14 @@ interface CoreState {
 
   updateCompanySettings: (settings: Partial<CompanySettings>) => void;
   updateCurrencyRates: (rates: Partial<CurrencyRates>) => void;
+
+  addVoucher: (voucher: Omit<Voucher, 'id'>) => void;
+  updateVoucher: (id: string, data: Partial<Voucher>) => void;
+  deleteVoucher: (id: string) => void;
 }
 
 // ===== Combined AppState =====
-export type AppState = TripsSlice & SuppliersSlice & ProductsSlice & ExpensesSlice & CoreState;
+export type AppState = TripsSlice & SuppliersSlice & ProductsSlice & ExpensesSlice & BuyingListSlice & CoreState;
 
 export const useAppStore = create<AppState>()(
   persist(
@@ -173,6 +202,7 @@ export const useAppStore = create<AppState>()(
       ...createSuppliersSlice(...a),
       ...createProductsSlice(...a),
       ...createExpensesSlice(...a),
+      ...createBuyingListSlice(...a),
 
       // ===== Core State (not yet in slices) =====
       shipments: mockShipments,
@@ -181,6 +211,7 @@ export const useAppStore = create<AppState>()(
       quotations: defaultQuotations,
       purchaseInvoices: defaultPurchaseInvoices,
       salesInvoices: defaultSalesInvoices,
+      vouchers: [],
       companySettings: defaultCompanySettings,
       currencyRates: defaultCurrencyRates,
 
@@ -199,14 +230,53 @@ export const useAppStore = create<AppState>()(
         a[0]((state) => ({ customers: state.customers.filter((c) => c.id !== id) })),
 
       addQuotation: (quotation) =>
-        a[0]((state) => ({ quotations: [{ ...quotation, id: generateId() }, ...state.quotations] })),
+        a[0]((state) => {
+          const newQuotation = { ...quotation, id: generateId() };
+          const newBuyingItems: BuyingItem[] = quotation.items.map(item => {
+            const bItem: BuyingItem = {
+              id: generateId(),
+              product_name: item.product_name || 'منتج غير معروف',
+              oem_number: item.oem_number,
+              target_quantity: item.quantity,
+              bought_quantity: 0,
+              priority: 'medium',
+              status: 'pending',
+              notes: `طلب عميل من عرض سعر #${quotation.number || 'جديد'}`,
+              trip_id: 'all',
+            };
+            if (quotation.customer_name) bItem.customer_name = quotation.customer_name;
+            return bItem;
+          });
+          return { 
+            quotations: [newQuotation, ...state.quotations],
+            buyingList: [...newBuyingItems, ...state.buyingList]
+          };
+        }),
       updateQuotation: (id, data) =>
         a[0]((state) => ({ quotations: state.quotations.map((q) => (q.id === id ? { ...q, ...data } : q)) })),
       deleteQuotation: (id) =>
         a[0]((state) => ({ quotations: state.quotations.filter((q) => q.id !== id) })),
 
       addPurchaseInvoice: (invoice) =>
-        a[0]((state) => ({ purchaseInvoices: [...state.purchaseInvoices, { ...invoice, id: generateId() }] })),
+        a[0]((state) => {
+          const newInvoice = { ...invoice, id: generateId() };
+          const newBuyingList = state.buyingList.map(bItem => {
+            const matchingInvItem = invoice.items.find(i => i.oem_number === bItem.oem_number);
+            if (matchingInvItem) {
+              const newBoughtQty = bItem.bought_quantity + matchingInvItem.quantity;
+              return {
+                ...bItem,
+                bought_quantity: newBoughtQty,
+                status: (newBoughtQty >= bItem.target_quantity) ? 'bought' : bItem.status as any
+              };
+            }
+            return bItem;
+          });
+          return { 
+            purchaseInvoices: [...state.purchaseInvoices, newInvoice],
+            buyingList: newBuyingList
+          };
+        }),
       updatePurchaseInvoice: (id, data) =>
         a[0]((state) => ({ purchaseInvoices: state.purchaseInvoices.map((inv) => (inv.id === id ? { ...inv, ...data } : inv)) })),
       deletePurchaseInvoice: (id) =>
@@ -230,6 +300,13 @@ export const useAppStore = create<AppState>()(
         a[0]((state) => ({ companySettings: { ...state.companySettings, ...settings } })),
       updateCurrencyRates: (rates) =>
         a[0]((state) => ({ currencyRates: { ...state.currencyRates, ...rates } })),
+
+      addVoucher: (voucher) =>
+        a[0]((state) => ({ vouchers: [...state.vouchers, { ...voucher, id: generateId() }] })),
+      updateVoucher: (id, data) =>
+        a[0]((state) => ({ vouchers: state.vouchers.map((v) => (v.id === id ? { ...v, ...data } : v)) })),
+      deleteVoucher: (id) =>
+        a[0]((state) => ({ vouchers: state.vouchers.filter((v) => v.id !== id) })),
     }),
     {
       name: 'trade-navigator-store',

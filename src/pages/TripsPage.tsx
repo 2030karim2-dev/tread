@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, MapPin, Calendar, Edit2, Trash2, MoreVertical } from 'lucide-react';
 import { PageHeader, StatusBadge, EmptyState, TextField, SearchBar, ExportButton, ConfirmDialog } from '@/components/shared';
@@ -38,7 +38,7 @@ export default function TripsPage() {
     });
   }, [trips, search, statusFilter]);
 
-  const handleAdd = () => {
+  const handleAdd = useCallback(() => {
     const result = tripSchema.safeParse(form);
     if (!result.success) {
       const fieldErrors: Record<string, string> = {};
@@ -60,9 +60,9 @@ export default function TripsPage() {
     setErrors({});
     setEditingTrip(null);
     setOpen(false);
-  };
+  }, [form, editingTrip, updateTrip, addTrip]);
 
-  const handleEdit = (trip: Trip) => {
+  const handleEdit = useCallback((trip: Trip) => {
     setEditingTrip(trip);
     setForm({
       name: trip.name,
@@ -73,17 +73,17 @@ export default function TripsPage() {
       notes: trip.notes,
     });
     setOpen(true);
-  };
+  }, []);
 
-  const handleDelete = () => {
+  const handleDelete = useCallback(() => {
     if (deleteId) {
       deleteTrip(deleteId);
       toast({ title: 'تم الحذف', description: 'تم حذف الرحلة بنجاح' });
       setDeleteId(null);
     }
-  };
+  }, [deleteId, deleteTrip]);
 
-  const exportColumns = [
+  const exportColumns = useMemo(() => [
     { key: 'name', header: 'اسم الرحلة' },
     { key: 'country', header: 'البلد' },
     { key: 'city', header: 'المدينة' },
@@ -91,7 +91,7 @@ export default function TripsPage() {
     { key: 'end_date', header: 'تاريخ النهاية' },
     { key: 'status', header: 'الحالة' },
     { key: 'notes', header: 'ملاحظات' },
-  ];
+  ], []);
 
   return (
     <div className="space-y-3 sm:space-y-4 lg:space-y-6">
@@ -164,7 +164,7 @@ export default function TripsPage() {
                 <h4 className="font-bold text-[11px] sm:text-sm truncate">{trip.name}</h4>
                 <div className="flex items-center gap-0.5">
                   <div className="scale-75 origin-top-right transform -translate-y-1">
-                    <StatusBadge status={trip.status} />
+                    <StatusBadge status={trip.status || 'planning'} />
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
